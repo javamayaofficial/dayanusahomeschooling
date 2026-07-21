@@ -549,7 +549,8 @@ async def _get_skill_lesson(db, class_id, title: str) -> SkillLesson | None:
 
 def _apply(obj, data: dict, keys: Iterable[str]) -> None:
     for key in keys:
-        setattr(obj, key, data[key])
+        if key in data:
+            setattr(obj, key, data[key])
 
 
 async def seed_academic(db) -> tuple[int, int]:
