@@ -4,6 +4,9 @@ Basis pengetahuan RAG. Kolom embedding memakai pgvector Vector(768) di PostgreSQ
 Untuk menjaga model tetap bisa di-`create_all` di sqlite (uji non-vektor), tipe
 embedding memakai `.with_variant(Text, "sqlite")` — di produksi (Postgres) tetap Vector.
 Similarity search sebenarnya hanya berjalan di PostgreSQL + ekstensi pgvector.
+
+Catatan: service AI meminta Gemini mengembalikan embedding 768 dimensi agar tetap
+kompatibel dengan kolom pgvector yang sudah dimigrasikan di database produksi.
 """
 import uuid
 

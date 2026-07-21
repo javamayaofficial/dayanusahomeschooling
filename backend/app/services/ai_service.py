@@ -52,12 +52,19 @@ def _require_genai():
     return genai
 
 
+EMBEDDING_DIMENSION = 768
+
+
 # ---------- Embedding ----------
 async def generate_embedding(text: str) -> list[float]:
     genai = _require_genai()
 
     def _embed():
-        res = genai.embed_content(model=settings.EMBEDDING_MODEL, content=text)
+        res = genai.embed_content(
+            model=settings.EMBEDDING_MODEL,
+            content=text,
+            output_dimensionality=EMBEDDING_DIMENSION,
+        )
         return res["embedding"]
 
     return await asyncio.to_thread(_embed)
