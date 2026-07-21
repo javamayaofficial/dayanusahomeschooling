@@ -1,4 +1,16 @@
 import enum
+from sqlalchemy import Enum as SAEnum
+
+
+def db_enum(enum_cls: type[enum.Enum]) -> SAEnum:
+    """Persist enum values (lowercase) to match PostgreSQL enum types from migrations."""
+    return SAEnum(
+        enum_cls,
+        values_callable=lambda members: [member.value for member in members],
+        name=enum_cls.__name__.lower(),
+    )
+
+
 class UserRole(str, enum.Enum):
     SISWA="siswa"; ORANG_TUA="orang_tua"; TUTOR="tutor"; ADMIN_PKBM="admin_pkbm"; ADMIN_LSP="admin_lsp"; ADMIN_YAYASAN="admin_yayasan"
 class PaketLevel(str, enum.Enum):

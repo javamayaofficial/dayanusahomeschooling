@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text, UniqueConstraint, Uuid
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDMixin
-from app.models.enums import SubmissionStatus
+from app.models.enums import SubmissionStatus, db_enum
 class Assignment(Base, UUIDMixin, TimestampMixin):
     __tablename__="assignments"
     lesson_id: Mapped[uuid.UUID|None]=mapped_column(Uuid, ForeignKey("skill_lessons.id", ondelete="SET NULL"))
@@ -18,7 +18,7 @@ class Submission(Base, UUIDMixin, TimestampMixin):
     assignment_id: Mapped[uuid.UUID]=mapped_column(Uuid, ForeignKey("assignments.id", ondelete="CASCADE"), index=True)
     student_id: Mapped[uuid.UUID]=mapped_column(Uuid, ForeignKey("student_profiles.id", ondelete="CASCADE"), index=True)
     content_text: Mapped[str|None]=mapped_column(Text); file_url: Mapped[str|None]=mapped_column(String(500))
-    status: Mapped[SubmissionStatus]=mapped_column(Enum(SubmissionStatus), default=SubmissionStatus.SUBMITTED)
+    status: Mapped[SubmissionStatus]=mapped_column(db_enum(SubmissionStatus), default=SubmissionStatus.SUBMITTED)
     submitted_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True)); grade: Mapped[float|None]=mapped_column(Float)
     feedback: Mapped[str|None]=mapped_column(Text); graded_at: Mapped[datetime|None]=mapped_column(DateTime(timezone=True))
     assignment: Mapped["Assignment"]=relationship(back_populates="submissions")

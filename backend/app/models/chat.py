@@ -6,11 +6,11 @@ memetakan langsung ke endpoint /chat/session, /chat/message, /chat/history/{sess
 """
 import uuid
 
-from sqlalchemy import Enum, ForeignKey, String, Text, Uuid
+from sqlalchemy import ForeignKey, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
-from app.models.enums import ChatRole
+from app.models.enums import ChatRole, db_enum
 
 
 class ChatSession(Base, UUIDMixin, TimestampMixin):
@@ -32,7 +32,7 @@ class ChatMessage(Base, UUIDMixin, TimestampMixin):
     session_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("chat_sessions.id", ondelete="CASCADE"), index=True
     )
-    role: Mapped[ChatRole] = mapped_column(Enum(ChatRole))
+    role: Mapped[ChatRole] = mapped_column(db_enum(ChatRole))
     content: Mapped[str] = mapped_column(Text)
 
     session: Mapped["ChatSession"] = relationship(back_populates="messages")
