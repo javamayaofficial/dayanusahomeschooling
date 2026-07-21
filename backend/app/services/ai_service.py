@@ -82,7 +82,10 @@ async def generate_embeddings(texts: Sequence[str]) -> list[list[float]]:
             content=list(texts),
             output_dimensionality=EMBEDDING_DIMENSION,
         )
-        return [item["embedding"] for item in res["embedding"]]
+        raw = res["embedding"]
+        if raw and isinstance(raw[0], (int, float)):
+            return [raw]
+        return raw
 
     return await asyncio.to_thread(_embed_many)
 
