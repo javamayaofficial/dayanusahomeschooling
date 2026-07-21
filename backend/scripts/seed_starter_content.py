@@ -84,6 +84,9 @@ ACADEMIC_MODULES = [
                 "title": "Fotosintesis dengan Bahasa Sederhana",
                 "order_index": 1,
                 "duration_minutes": 35,
+                "content_type": ContentType.VIDEO,
+                "content_url": "https://www.youtube.com/watch?v=TSzvwF4gNDY",
+                "is_downloadable": False,
                 "content_text": (
                     "Fotosintesis adalah proses tumbuhan membuat makanan sendiri. Tumbuhan memerlukan cahaya matahari, air, "
                     "dan karbon dioksida dari udara. Dengan bantuan klorofil yang terdapat pada daun, tumbuhan mengubah bahan "
@@ -459,6 +462,9 @@ SOFT_SKILL_CLASSES = [
                 "title": "Framing dan Komposisi yang Nyaman Dilihat",
                 "order_index": 1,
                 "duration_minutes": 30,
+                "content_type": ContentType.VIDEO,
+                "content_url": "https://www.youtube.com/watch?v=HgEiag5zZc0",
+                "is_downloadable": False,
                 "content_text": (
                     "Video yang enak ditonton tidak selalu memerlukan kamera mahal. Dengan ponsel, hasil tetap bisa terlihat rapi jika siswa memahami framing "
                     "dan komposisi. Hal dasar yang perlu diperhatikan antara lain posisi kamera stabil, pencahayaan cukup, dan subjek tidak terpotong secara aneh.\n\n"
@@ -566,16 +572,20 @@ async def seed_academic(db) -> tuple[int, int]:
 
         for lesson_data in item["lessons"]:
             lesson = await _get_lesson(db, module.id, lesson_data["title"])
-            lesson_fields = ("title", "order_index", "duration_minutes", "content_text")
+            lesson_fields = ("title", "order_index", "duration_minutes", "content_text", "content_url")
             if lesson is None:
-                lesson = Lesson(module_id=module.id, content_type=ContentType.TEXT, is_downloadable=True)
+                lesson = Lesson(
+                    module_id=module.id,
+                    content_type=lesson_data.get("content_type", ContentType.TEXT),
+                    is_downloadable=lesson_data.get("is_downloadable", True),
+                )
                 _apply(lesson, lesson_data, lesson_fields)
                 db.add(lesson)
                 lessons_created += 1
             else:
                 _apply(lesson, lesson_data, lesson_fields)
-                lesson.content_type = ContentType.TEXT
-                lesson.is_downloadable = True
+                lesson.content_type = lesson_data.get("content_type", ContentType.TEXT)
+                lesson.is_downloadable = lesson_data.get("is_downloadable", True)
 
     return modules_created, lessons_created
 
@@ -607,20 +617,20 @@ async def seed_soft_skill(db) -> tuple[int, int]:
 
         for lesson_data in item["lessons"]:
             lesson = await _get_skill_lesson(db, skill_class.id, lesson_data["title"])
-            lesson_fields = ("title", "order_index", "duration_minutes", "content_text")
+            lesson_fields = ("title", "order_index", "duration_minutes", "content_text", "content_url")
             if lesson is None:
                 lesson = SkillLesson(
                     class_id=skill_class.id,
-                    content_type=ContentType.TEXT,
-                    is_downloadable=True,
+                    content_type=lesson_data.get("content_type", ContentType.TEXT),
+                    is_downloadable=lesson_data.get("is_downloadable", True),
                 )
                 _apply(lesson, lesson_data, lesson_fields)
                 db.add(lesson)
                 lessons_created += 1
             else:
                 _apply(lesson, lesson_data, lesson_fields)
-                lesson.content_type = ContentType.TEXT
-                lesson.is_downloadable = True
+                lesson.content_type = lesson_data.get("content_type", ContentType.TEXT)
+                lesson.is_downloadable = lesson_data.get("is_downloadable", True)
 
     return classes_created, lessons_created
 
