@@ -26,3 +26,7 @@ _*.db
 Thumbs.db
 .idea/
 .vscode/
+# Local deploy artifacts
+.vercel/
+vercel.json
+.vercelignore
