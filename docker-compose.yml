@@ -1,0 +1,47 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: dayanusa
+      POSTGRES_PASSWORD: dayanusa_dev
+      POSTGRES_DB: dayanusa
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dayanusa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://dayanusa:dayanusa_dev@db:5432/dayanusa
+      SECRET_KEY: ${SECRET_KEY:-ubah-dengan-string-acak-yang-panjang}
+      FRONTEND_ORIGIN: http://localhost:3000
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/text-embedding-004}
+    ports:
+      - "8000:8000"
+    # 'alembic upgrade head' dijalankan otomatis oleh Dockerfile CMD.
+    # Setelah container hidup, seed knowledge base (butuh GEMINI_API_KEY):
+    #   docker compose exec backend python scripts/seed_knowledge_base.py
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_APP_NAME: Dayanusa Homeschooling
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:

@@ -1,0 +1,6 @@
+from app.schemas.auth import (AccessToken, AuthResponse, LoginRequest, RefreshRequest, RegisterRequest, TokenPair, UserOut)
+from app.schemas.academic import (LessonOut, LessonCreate, ModuleOut, ModuleDetail, ModuleCreate, ModuleUpdate)
+from app.schemas.softskill import (SkillLessonOut, SkillClassOut, SkillClassDetail, SkillClassCreate, ProgressUpdate, ProgressOut, ProgressSummary, DashboardSummary)
+from app.schemas.assignment import (AssignmentCreate, AssignmentUpdate, AssignmentOut, AssignmentWithMySubmission, SubmissionCreate, SubmissionOut, GradeRequest)
+from app.schemas.portfolio import (PortfolioCreate, PortfolioUpdate, PortfolioOut, PortfolioPage, LikeResult)
+from app.schemas.chat import (SessionOut, MessageOut, SessionWithPreview, ChatMessageRequest, SuggestionsOut)
