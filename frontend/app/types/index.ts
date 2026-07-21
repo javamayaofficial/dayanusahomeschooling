@@ -1,9 +1,11 @@
 export type UserRole = "siswa"|"orang_tua"|"tutor"|"admin_pkbm"|"admin_lsp"|"admin_yayasan";
 export type PaketLevel = "paket_a"|"paket_b"|"paket_c";
 export type ContentType = "text"|"video"|"pdf"|"link";
+export type ContentKind = "module_lesson"|"skill_lesson";
 export type MediaType = "image"|"video"|"pdf"|"link";
 export type PortfolioCategory = "digital_marketing"|"content_creator"|"product_creator"|"other";
 export type SubmissionStatus = "submitted"|"graded"|"returned";
+export type ProgressStatus = "not_started"|"in_progress"|"completed";
 export type ChatRole = "user"|"assistant";
 
 export interface User { id:string; email:string; full_name:string; role:UserRole; phone?:string|null; is_active:boolean; is_verified:boolean; created_at:string; }
@@ -18,6 +20,7 @@ export interface SkillClass { id:string; title:string; category:string; descript
 export interface SkillClassDetail extends SkillClass { lessons:Lesson[]; }
 export interface ProgressSummary { total:number; completed:number; percent:number; }
 export interface DashboardSummary { academic:ProgressSummary; soft_skill:ProgressSummary; modules_available:number; classes_available:number; portfolio_count:number; }
+export interface ProgressItem { id:string; content_kind:ContentKind; content_id:string; status:ProgressStatus; score?:number|null; completed_at?:string|null; }
 
 export interface Submission { id:string; assignment_id:string; student_id:string; content_text?:string|null; file_url?:string|null; status:SubmissionStatus; submitted_at?:string|null; grade?:number|null; feedback?:string|null; graded_at?:string|null; }
 export interface Assignment { id:string; tutor_id:string; lesson_id?:string|null; title:string; description?:string|null; due_date?:string|null; max_score:number; is_published:boolean; created_at:string; my_submission?:Submission|null; }
