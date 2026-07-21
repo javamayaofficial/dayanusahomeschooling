@@ -28,7 +28,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:?SECRET_KEY is required}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?FRONTEND_ORIGIN is required}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/gemini-embedding-001}
     ports:
       - "127.0.0.1:8000:8000"

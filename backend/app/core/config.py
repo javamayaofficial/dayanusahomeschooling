@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60; REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     FRONTEND_ORIGIN: str = "http://localhost:3000"
     AI_PROVIDER: str = "gemini"; GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"; EMBEDDING_MODEL: str = "models/gemini-embedding-001"
+    GEMINI_MODEL: str = "gemini-flash-latest"; EMBEDDING_MODEL: str = "models/gemini-embedding-001"
     RAG_TOP_K: int = 5; RAG_MAX_DISTANCE: float = 0.7
     @field_validator("DATABASE_URL")
     @classmethod
