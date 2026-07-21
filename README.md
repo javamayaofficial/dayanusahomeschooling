@@ -23,7 +23,7 @@ Next.js 14 (App Router, TS, Tailwind)  ──HTTP/SSE──►  FastAPI (async)
 - **Frontend**: Next.js 14, TypeScript, Tailwind. Auth berbasis JWT (access + refresh).
 - **Backend**: FastAPI + SQLAlchemy 2 (async) + Alembic. RBAC per peran.
 - **Basis data**: PostgreSQL; ekstensi **pgvector** untuk pencarian kemiripan RAG.
-- **AI**: Gemini `text-embedding-004` (embedding) + `gemini-1.5-flash` (chat, streaming).
+- **AI**: Gemini `models/gemini-embedding-001` (embedding) + `gemini-2.5-flash` (chat, streaming).
 
 ## Struktur repo
 
@@ -95,8 +95,8 @@ npm run dev
 | `SECRET_KEY` | string acak panjang | Untuk JWT |
 | `FRONTEND_ORIGIN` | `https://app.contoh.id` | CORS (boleh dipisah koma) |
 | `GEMINI_API_KEY` | `AIza…` | **Server-side saja** |
-| `GEMINI_MODEL` | `gemini-1.5-flash` | |
-| `EMBEDDING_MODEL` | `models/text-embedding-004` | 768 dimensi |
+| `GEMINI_MODEL` | `gemini-2.5-flash` | |
+| `EMBEDDING_MODEL` | `models/gemini-embedding-001` | |
 
 **frontend/.env.local**
 

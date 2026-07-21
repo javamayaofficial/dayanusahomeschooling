@@ -2,7 +2,7 @@
 Seed basis pengetahuan RAG dari materi PKBM & soft skill.
 
 Proses: kumpulkan teks (judul + konten lesson) → chunking per paragraf (maks ~500 char)
-→ embedding via Gemini text-embedding-004 → simpan ke knowledge_base beserta metadata.
+→ embedding via Gemini models/gemini-embedding-001 → simpan ke knowledge_base beserta metadata.
 
 MEMERLUKAN: GEMINI_API_KEY + PostgreSQL dengan ekstensi pgvector.
 Jalankan:  python scripts/seed_knowledge_base.py
