@@ -8,6 +8,7 @@ MEMERLUKAN: GEMINI_API_KEY + PostgreSQL dengan ekstensi pgvector.
 Jalankan:  python scripts/seed_knowledge_base.py
 """
 import asyncio
+import re
 
 from sqlalchemy import delete, select
 
@@ -20,6 +21,8 @@ from app.services import ai_service
 
 MAX_CHARS = 500
 BATCH_SIZE = 12
+RETRY_SLEEP_SECONDS = 35
+MAX_RETRIES_PER_BATCH = 4
 
 
 def chunk_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:
@@ -72,6 +75,13 @@ async def collect_documents(db) -> list[dict]:
     return docs
 
 
+def _retry_delay_from_error(exc: Exception) -> int:
+    match = re.search(r"Please retry in ([0-9]+)", str(exc))
+    if match:
+        return max(int(match.group(1)) + 5, RETRY_SLEEP_SECONDS)
+    return RETRY_SLEEP_SECONDS
+
+
 async def seed() -> None:
     if not settings.ai_enabled:
         raise SystemExit("GEMINI_API_KEY belum diset. Isi .env terlebih dahulu.")
@@ -87,7 +97,16 @@ async def seed() -> None:
         total = 0
         for start in range(0, len(entries), BATCH_SIZE):
             batch = entries[start : start + BATCH_SIZE]
-            embeddings = await ai_service.generate_embeddings([content for content, _ in batch])
+            retries = 0
+            while True:
+                try:
+                    embeddings = await ai_service.generate_embeddings([content for content, _ in batch])
+                    break
+                except Exception as exc:
+                    retries += 1
+                    if retries > MAX_RETRIES_PER_BATCH:
+                        raise
+                    await asyncio.sleep(_retry_delay_from_error(exc))
             for (content, meta), embedding in zip(batch, embeddings, strict=True):
                 db.add(KnowledgeBase(content=content, embedding=embedding, meta=meta))
                 total += 1
