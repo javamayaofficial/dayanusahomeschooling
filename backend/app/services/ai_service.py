@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,6 +68,23 @@ async def generate_embedding(text: str) -> list[float]:
         return res["embedding"]
 
     return await asyncio.to_thread(_embed)
+
+
+async def generate_embeddings(texts: Sequence[str]) -> list[list[float]]:
+    if not texts:
+        return []
+
+    genai = _require_genai()
+
+    def _embed_many():
+        res = genai.embed_content(
+            model=settings.EMBEDDING_MODEL,
+            content=list(texts),
+            output_dimensionality=EMBEDDING_DIMENSION,
+        )
+        return [item["embedding"] for item in res["embedding"]]
+
+    return await asyncio.to_thread(_embed_many)
 
 
 # ---------- Similarity search (PostgreSQL + pgvector) ----------

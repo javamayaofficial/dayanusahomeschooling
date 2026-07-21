@@ -19,6 +19,7 @@ from app.models.softskill import SkillLesson, SoftSkillClass
 from app.services import ai_service
 
 MAX_CHARS = 500
+BATCH_SIZE = 12
 
 
 def chunk_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:
@@ -78,13 +79,19 @@ async def seed() -> None:
     async with AsyncSessionLocal() as db:
         await db.execute(delete(KnowledgeBase))  # reset
         docs = await collect_documents(db)
-        total = 0
+        entries: list[tuple[str, dict]] = []
         for doc in docs:
             for idx, chunk in enumerate(chunk_text(doc["text"])):
-                embedding = await ai_service.generate_embedding(chunk)
-                meta = {**doc["meta"], "chunk_index": idx}
-                db.add(KnowledgeBase(content=chunk, embedding=embedding, meta=meta))
+                entries.append((chunk, {**doc["meta"], "chunk_index": idx}))
+
+        total = 0
+        for start in range(0, len(entries), BATCH_SIZE):
+            batch = entries[start : start + BATCH_SIZE]
+            embeddings = await ai_service.generate_embeddings([content for content, _ in batch])
+            for (content, meta), embedding in zip(batch, embeddings, strict=True):
+                db.add(KnowledgeBase(content=content, embedding=embedding, meta=meta))
                 total += 1
+
         await db.commit()
         print(f"Seed knowledge base selesai: {total} chunk dari {len(docs)} dokumen.")
 
