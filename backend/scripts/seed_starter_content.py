@@ -155,6 +155,129 @@ ACADEMIC_MODULES = [
             },
         ],
     },
+    {
+        "paket": PaketLevel.PAKET_A,
+        "subject": "Bahasa Indonesia",
+        "title": "Literasi Dasar: Membaca Paham dan Menulis Ringkas",
+        "description": (
+            "Modul Paket A untuk melatih siswa memahami isi bacaan sederhana, "
+            "menemukan gagasan utama, dan menulis ringkasan dengan bahasa sendiri."
+        ),
+        "order_index": 4,
+        "lessons": [
+            {
+                "title": "Menemukan Gagasan Utama Bacaan",
+                "order_index": 1,
+                "duration_minutes": 25,
+                "content_text": (
+                    "Setiap bacaan memiliki ide pokok yang menjadi inti pembahasan. Saat siswa bisa menemukan "
+                    "gagasan utama, mereka tidak hanya membaca kata demi kata, tetapi memahami pesan yang ingin "
+                    "disampaikan penulis. Keterampilan ini sangat penting karena menjadi dasar memahami soal, cerita, "
+                    "atau petunjuk dalam kehidupan sehari-hari.\n\n"
+                    "Cara sederhana melatihnya adalah dengan mengajak siswa membaca paragraf pendek, lalu menjawab pertanyaan: "
+                    "paragraf ini sedang membicarakan apa? Kalimat yang paling mewakili isi biasanya berhubungan dengan topik "
+                    "yang diulang atau dijelaskan oleh kalimat lainnya. Jika siswa masih bingung, guru dapat membantu dengan "
+                    "menandai kata-kata kunci.\n\n"
+                    "Setelah menemukan gagasan utama, siswa bisa membedakan mana informasi penting dan mana informasi pendukung. "
+                    "Kemampuan ini membantu mereka belajar lebih efektif dan tidak mudah tenggelam dalam detail yang belum perlu."
+                ),
+            },
+            {
+                "title": "Menulis Ringkasan dengan Bahasa Sendiri",
+                "order_index": 2,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Ringkasan adalah versi singkat dari bacaan yang tetap memuat isi utama. Menulis ringkasan melatih siswa "
+                    "untuk berpikir terstruktur, memilih informasi penting, dan menyusun kalimat yang lebih padat. Ini berbeda "
+                    "dengan menyalin ulang bacaan karena siswa perlu mengolah isi dengan pemahaman mereka sendiri.\n\n"
+                    "Langkah mudahnya adalah membaca teks, menandai tiga sampai lima poin penting, lalu menyusunnya menjadi paragraf "
+                    "pendek. Gunakan kalimat sederhana yang jelas. Hindari memasukkan semua detail kecil agar ringkasan tetap fokus.\n\n"
+                    "Latihan ringkasan membantu siswa saat belajar materi pelajaran lain, termasuk IPA, IPS, atau video pembelajaran. "
+                    "Mereka jadi lebih terbiasa menangkap inti informasi dan menjelaskannya kembali dengan runtut."
+                ),
+            },
+        ],
+    },
+    {
+        "paket": PaketLevel.PAKET_B,
+        "subject": "IPS",
+        "title": "Kehidupan Sosial dan Ekonomi: Dari Rumah ke Masyarakat",
+        "description": (
+            "Modul Paket B untuk memahami kegiatan ekonomi, peran masyarakat, "
+            "dan hubungan antara kebutuhan, pekerjaan, dan lingkungan sekitar."
+        ),
+        "order_index": 5,
+        "lessons": [
+            {
+                "title": "Kebutuhan, Keinginan, dan Pilihan",
+                "order_index": 1,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Dalam kehidupan sehari-hari, setiap orang memiliki kebutuhan dan keinginan. Kebutuhan adalah hal yang benar-benar "
+                    "diperlukan untuk hidup, seperti makanan, pakaian, tempat tinggal, dan pendidikan. Keinginan adalah hal yang ingin "
+                    "dimiliki, tetapi tidak selalu harus ada saat itu juga.\n\n"
+                    "Siswa perlu memahami perbedaan ini agar bisa belajar mengambil keputusan dengan bijak. Misalnya, membeli buku pelajaran "
+                    "lebih penting daripada membeli barang yang hanya bersifat hiburan sesaat. Dengan membedakan kebutuhan dan keinginan, siswa "
+                    "belajar mengelola pilihan secara lebih bertanggung jawab.\n\n"
+                    "Materi ini juga berkaitan dengan kehidupan keluarga. Saat penghasilan terbatas, keluarga perlu menentukan prioritas. Dari sini, "
+                    "siswa belajar bahwa kegiatan ekonomi selalu melibatkan pertimbangan dan pilihan."
+                ),
+            },
+            {
+                "title": "Peran Produsen, Konsumen, dan Distribusi",
+                "order_index": 2,
+                "duration_minutes": 35,
+                "content_text": (
+                    "Dalam kegiatan ekonomi, ada pihak yang menghasilkan barang atau jasa, ada yang menggunakan, dan ada yang menyalurkan. "
+                    "Produsen membuat atau menyediakan barang, konsumen memakai atau membeli, dan distributor membantu barang sampai ke tangan "
+                    "pembeli. Ketiganya saling terhubung dalam rantai ekonomi.\n\n"
+                    "Contohnya pada usaha makanan rumahan: pemilik usaha memasak produk sebagai produsen, pelanggan menjadi konsumen, dan kurir "
+                    "atau toko online dapat berperan sebagai distributor. Jika satu bagian terganggu, proses penjualan ikut terhambat.\n\n"
+                    "Memahami peran ini membantu siswa melihat bahwa ekonomi bukan hanya soal uang, tetapi juga soal kerja sama, alur distribusi, "
+                    "dan kemampuan memenuhi kebutuhan masyarakat."
+                ),
+            },
+        ],
+    },
+    {
+        "paket": PaketLevel.PAKET_C,
+        "subject": "Matematika",
+        "title": "Matematika Terapan: Persamaan Linear dan Literasi Data",
+        "description": (
+            "Modul Paket C untuk menghubungkan persamaan linear, tabel, dan grafik "
+            "dengan persoalan nyata seperti penjualan, biaya, dan kebiasaan belajar."
+        ),
+        "order_index": 6,
+        "lessons": [
+            {
+                "title": "Persamaan Linear dalam Masalah Sehari-hari",
+                "order_index": 1,
+                "duration_minutes": 35,
+                "content_text": (
+                    "Persamaan linear membantu kita menulis hubungan antarbesaran secara singkat dan logis. Dalam kehidupan sehari-hari, "
+                    "persamaan linear bisa dipakai untuk menghitung total biaya, target tabungan, atau hubungan antara jumlah barang dan harga.\n\n"
+                    "Contoh sederhana: jika satu buku seharga Rp8.000 dan kamu membeli beberapa buku, total biayanya bisa ditulis sebagai "
+                    "8.000 dikali jumlah buku. Bentuk seperti ini memudahkan siswa memahami bahwa matematika bukan sekadar angka, melainkan "
+                    "alat untuk menggambarkan situasi nyata.\n\n"
+                    "Dengan belajar persamaan linear, siswa juga lebih siap membaca tabel dan grafik pada pelajaran lain. Mereka belajar bahwa "
+                    "setiap rumus sebenarnya mewakili hubungan yang dapat diamati dalam kehidupan."
+                ),
+            },
+            {
+                "title": "Membaca Tabel dan Grafik Sederhana",
+                "order_index": 2,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Literasi data adalah kemampuan membaca dan memahami informasi yang disajikan dalam bentuk tabel atau grafik. Di era digital, "
+                    "kemampuan ini penting karena banyak keputusan dibuat berdasarkan data, mulai dari laporan penjualan sampai hasil survei sederhana.\n\n"
+                    "Siswa dapat memulai dari pertanyaan dasar: data apa yang paling tinggi, paling rendah, dan bagaimana perubahannya dari waktu ke waktu? "
+                    "Misalnya grafik jam belajar mingguan dapat membantu siswa melihat pola kapan mereka paling produktif atau kapan perlu memperbaiki kebiasaan.\n\n"
+                    "Saat siswa mampu membaca data, mereka tidak mudah tertipu oleh angka atau visual yang menyesatkan. Ini adalah bekal penting untuk pendidikan "
+                    "lanjutan, pekerjaan, dan kewargaan digital yang kritis."
+                ),
+            },
+        ],
+    },
 ]
 
 
@@ -279,6 +402,118 @@ SOFT_SKILL_CLASSES = [
                     "dibanding pertanyaan 'menurutmu bagus tidak?'.\n\n"
                     "Dengan validasi sederhana, siswa belajar membuat keputusan berbasis bukti. Ini adalah fondasi penting untuk kewirausahaan, inovasi produk, dan pengembangan "
                     "layanan digital."
+                ),
+            },
+        ],
+    },
+    {
+        "title": "Digital Marketing: Kalender Konten dan Evaluasi Sederhana",
+        "category": SoftSkillCategory.DIGITAL_MARKETING,
+        "description": (
+            "Kelas lanjutan pemula untuk menyusun kalender konten yang konsisten, "
+            "mengukur hasil dasar, dan memperbaiki komunikasi promosi dari minggu ke minggu."
+        ),
+        "skkni_code": "DM-GROW-04",
+        "level": SkillLevel.INTERMEDIATE,
+        "is_bnsp_certified": True,
+        "lessons": [
+            {
+                "title": "Menyusun Kalender Konten Mingguan",
+                "order_index": 1,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Kalender konten membantu tim atau individu menjaga konsistensi komunikasi. Tanpa perencanaan, promosi sering berhenti di tengah jalan "
+                    "atau terasa acak. Dengan kalender mingguan, siswa bisa menentukan topik, format, tujuan, dan kanal yang dipakai.\n\n"
+                    "Langkah paling praktis adalah membagi konten menjadi beberapa kategori, misalnya edukasi, promosi, testimoni, dan interaksi. Dari sana, "
+                    "siswa dapat menyusun urutan posting yang lebih seimbang. Kalender tidak harus rumit; spreadsheet sederhana pun sudah cukup untuk memulai.\n\n"
+                    "Konsistensi lebih penting daripada terlalu banyak ide yang tidak sempat dieksekusi. Melalui latihan ini, siswa belajar membangun ritme kerja "
+                    "yang lebih profesional."
+                ),
+            },
+            {
+                "title": "Membaca Hasil Dasar Konten",
+                "order_index": 2,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Setelah konten dipublikasikan, langkah berikutnya adalah membaca hasil dasarnya. Tidak semua metrik harus rumit; siswa dapat mulai dari "
+                    "jangkauan, simpanan, komentar, klik tautan, atau pesan yang masuk. Angka-angka ini membantu melihat apakah konten benar-benar menghasilkan respons.\n\n"
+                    "Yang penting bukan hanya angka besar, tetapi hubungan antara tujuan dan hasil. Jika tujuannya edukasi, simpanan dan durasi tonton bisa lebih "
+                    "bermakna. Jika tujuannya penjualan, klik dan pertanyaan dari calon pembeli mungkin lebih penting.\n\n"
+                    "Latihan evaluasi sederhana ini membiasakan siswa membuat perbaikan berbasis data, bukan hanya perasaan."
+                ),
+            },
+        ],
+    },
+    {
+        "title": "Content Creator: Produksi Video Pendek dengan Ponsel",
+        "category": SoftSkillCategory.CONTENT_CREATOR,
+        "description": (
+            "Kelas lanjutan pemula untuk merekam video pendek yang rapi, jelas, "
+            "dan tetap efektif meski hanya menggunakan ponsel serta alat sederhana."
+        ),
+        "skkni_code": "CC-GROW-05",
+        "level": SkillLevel.INTERMEDIATE,
+        "is_bnsp_certified": True,
+        "lessons": [
+            {
+                "title": "Framing dan Komposisi yang Nyaman Dilihat",
+                "order_index": 1,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Video yang enak ditonton tidak selalu memerlukan kamera mahal. Dengan ponsel, hasil tetap bisa terlihat rapi jika siswa memahami framing "
+                    "dan komposisi. Hal dasar yang perlu diperhatikan antara lain posisi kamera stabil, pencahayaan cukup, dan subjek tidak terpotong secara aneh.\n\n"
+                    "Salah satu teknik sederhana adalah rule of thirds, yaitu menempatkan objek utama di area yang nyaman dilihat, bukan selalu tepat di tengah. "
+                    "Selain itu, latar belakang perlu dijaga agar tidak terlalu ramai sehingga perhatian audiens tetap fokus pada isi pesan.\n\n"
+                    "Pemahaman visual seperti ini penting karena kualitas penyampaian bukan hanya dari kata-kata, tetapi juga dari cara pesan dipresentasikan."
+                ),
+            },
+            {
+                "title": "Alur Produksi Cepat: Rekam, Pilih, Edit",
+                "order_index": 2,
+                "duration_minutes": 35,
+                "content_text": (
+                    "Banyak pemula menunda membuat konten karena merasa proses produksi terlalu berat. Padahal, alur sederhana sudah cukup: rekam beberapa take, "
+                    "pilih yang paling jelas, lalu edit seperlunya. Fokus utama tetap pada pesan, bukan efek yang berlebihan.\n\n"
+                    "Siswa sebaiknya menyiapkan poin bicara singkat sebelum merekam. Setelah itu, rekam dua sampai tiga versi pembuka agar ada pilihan. Pada tahap edit, "
+                    "cukup rapikan bagian yang terlalu panjang, tambahkan teks penting, dan pastikan audio bisa dipahami.\n\n"
+                    "Kebiasaan produksi cepat membuat siswa lebih konsisten dan tidak mudah terjebak perfeksionisme. Ini sangat penting untuk pertumbuhan akun dan portofolio."
+                ),
+            },
+        ],
+    },
+    {
+        "title": "Product Creator: Packaging Penawaran dan Launch Awal",
+        "category": SoftSkillCategory.PRODUCT_CREATOR,
+        "description": (
+            "Kelas lanjutan pemula untuk mengemas penawaran, merumuskan manfaat, "
+            "dan menyiapkan peluncuran sederhana yang tetap meyakinkan."
+        ),
+        "skkni_code": "PC-GROW-06",
+        "level": SkillLevel.INTERMEDIATE,
+        "is_bnsp_certified": True,
+        "lessons": [
+            {
+                "title": "Mengemas Penawaran yang Mudah Dipahami",
+                "order_index": 1,
+                "duration_minutes": 30,
+                "content_text": (
+                    "Produk yang bagus bisa sulit terjual jika penawarannya membingungkan. Karena itu, siswa perlu belajar mengemas penawaran secara sederhana: "
+                    "apa produknya, untuk siapa, manfaat utamanya apa, dan bagaimana cara membelinya. Bahasa yang terlalu rumit justru membuat calon pengguna ragu.\n\n"
+                    "Penawaran yang baik menjawab pertanyaan dasar calon pembeli dengan cepat. Misalnya: siapa yang paling cocok memakai produk ini, masalah apa yang "
+                    "diselesaikan, dan hasil seperti apa yang bisa diharapkan. Dengan struktur ini, halaman penjualan atau caption menjadi lebih jelas.\n\n"
+                    "Kemampuan mengemas penawaran sangat penting karena produk bukan hanya soal isi, tetapi juga soal bagaimana nilainya dipahami orang lain."
+                ),
+            },
+            {
+                "title": "Peluncuran Awal yang Sederhana tapi Siap",
+                "order_index": 2,
+                "duration_minutes": 35,
+                "content_text": (
+                    "Launch awal tidak harus besar. Yang penting adalah kesiapan minimum: pesan utama jelas, alur pembelian mudah, dan komunikasi dilakukan secara konsisten. "
+                    "Siswa dapat memulai dari target kecil, misalnya menguji minat pada lingkaran terdekat atau komunitas yang relevan.\n\n"
+                    "Sebelum launch, siapkan daftar hal penting: deskripsi produk, harga atau mekanisme akses, contoh penggunaan, dan cara menerima pertanyaan dari calon pengguna. "
+                    "Jika semua sudah siap, proses peluncuran menjadi lebih tenang dan terukur.\n\n"
+                    "Materi ini membantu siswa memahami bahwa keberhasilan produk tidak hanya ditentukan saat produksi, tetapi juga saat momen perkenalannya ke pasar."
                 ),
             },
         ],
