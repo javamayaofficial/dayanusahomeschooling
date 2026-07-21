@@ -4,13 +4,14 @@ Revises: 0001_init
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 revision="0002_academic"; down_revision="0001_init"; branch_labels=None; depends_on=None
-paket_level=sa.Enum("paket_a","paket_b","paket_c",name="paketlevel", create_type=False)
-content_type=sa.Enum("text","video","pdf","link",name="contenttype", create_type=False)
-softskill_cat=sa.Enum("digital_marketing","content_creator","product_creator",name="softskillcategory", create_type=False)
-skill_level=sa.Enum("beginner","intermediate","advanced",name="skilllevel", create_type=False)
-content_kind=sa.Enum("module_lesson","skill_lesson",name="contentkind", create_type=False)
-progress_status=sa.Enum("not_started","in_progress","completed",name="progressstatus", create_type=False)
+paket_level=postgresql.ENUM("paket_a","paket_b","paket_c",name="paketlevel", create_type=False)
+content_type=postgresql.ENUM("text","video","pdf","link",name="contenttype", create_type=False)
+softskill_cat=postgresql.ENUM("digital_marketing","content_creator","product_creator",name="softskillcategory", create_type=False)
+skill_level=postgresql.ENUM("beginner","intermediate","advanced",name="skilllevel", create_type=False)
+content_kind=postgresql.ENUM("module_lesson","skill_lesson",name="contentkind", create_type=False)
+progress_status=postgresql.ENUM("not_started","in_progress","completed",name="progressstatus", create_type=False)
 def _ts(): return (sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
                    sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False))
 def upgrade():
