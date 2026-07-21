@@ -11,7 +11,7 @@ export default function Providers({ children }:{children:React.ReactNode}) {
 
     const syncBuild = async () => {
       try {
-        const res = await fetch("/api/build-info", { cache: "no-store" });
+        const res = await fetch("/build-info", { cache: "no-store" });
         if (!res.ok) return;
 
         const data = (await res.json()) as { buildId?: string };
