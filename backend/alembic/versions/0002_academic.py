@@ -5,16 +5,18 @@ Revises: 0001_init
 from alembic import op
 import sqlalchemy as sa
 revision="0002_academic"; down_revision="0001_init"; branch_labels=None; depends_on=None
-paket_level=sa.Enum("paket_a","paket_b","paket_c",name="paketlevel")
-content_type=sa.Enum("text","video","pdf","link",name="contenttype")
-softskill_cat=sa.Enum("digital_marketing","content_creator","product_creator",name="softskillcategory")
-skill_level=sa.Enum("beginner","intermediate","advanced",name="skilllevel")
-content_kind=sa.Enum("module_lesson","skill_lesson",name="contentkind")
-progress_status=sa.Enum("not_started","in_progress","completed",name="progressstatus")
+paket_level=sa.Enum("paket_a","paket_b","paket_c",name="paketlevel", create_type=False)
+content_type=sa.Enum("text","video","pdf","link",name="contenttype", create_type=False)
+softskill_cat=sa.Enum("digital_marketing","content_creator","product_creator",name="softskillcategory", create_type=False)
+skill_level=sa.Enum("beginner","intermediate","advanced",name="skilllevel", create_type=False)
+content_kind=sa.Enum("module_lesson","skill_lesson",name="contentkind", create_type=False)
+progress_status=sa.Enum("not_started","in_progress","completed",name="progressstatus", create_type=False)
 def _ts(): return (sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
                    sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False))
 def upgrade():
-    content_type.create(op.get_bind(), checkfirst=True)
+    bind = op.get_bind()
+    for enum_type in (content_type, softskill_cat, skill_level, content_kind, progress_status):
+        enum_type.create(bind, checkfirst=True)
     op.create_table("modules", sa.Column("id", sa.Uuid(), primary_key=True), sa.Column("paket", paket_level, nullable=False),
         sa.Column("subject", sa.String(100), nullable=False), sa.Column("title", sa.String(200), nullable=False),
         sa.Column("description", sa.Text()), sa.Column("cover_image_url", sa.String(500)),
