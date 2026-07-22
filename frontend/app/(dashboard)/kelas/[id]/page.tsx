@@ -13,6 +13,13 @@ const T:Record<string,string>={text:"Teks",video:"Video",pdf:"PDF",link:"Tautan"
 const RESUME_KEY = "skill-active-lesson:";
 type DetailTab = "materi"|"tugas";
 function fmt(iso?:string|null){ return iso ? new Date(iso).toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"}) : "Tanpa tenggat"; }
+function assignmentStatusMeta(assignment: Assignment){
+  const status = tabOf(assignment);
+  if (status==="graded") return { label:"Sudah dinilai", tone:"green" as const };
+  if (status==="submitted") return { label:"Menunggu nilai", tone:"gray" as const };
+  if (isOverdue(assignment)) return { label:"Terlambat", tone:"red" as const };
+  return { label:"Siap dikerjakan", tone:"gold" as const };
+}
 export default function KelasDetailPage() {
   const { id } = useParams<{id:string}>(); const { show } = useToast();
   const [c,setC]=useState<SkillClassDetail|null>(null); const [err,setErr]=useState<string|null>(null);
@@ -50,10 +57,15 @@ export default function KelasDetailPage() {
   async function complete(lid:string){ setBusy(lid);
     try {
       await markProgress("skill_lesson", lid);
-      setDone(d=>({...d,[lid]:true}));
+      const nextDone = {...done,[lid]:true};
+      const allLessonsDone = c ? c.lessons.every((lesson)=>nextDone[lesson.id]) : false;
+      setDone(nextDone);
       if (activeLesson?.id===lid && nextLesson) {
         setActiveId(nextLesson.id);
         show("Progres tersimpan, lanjut ke materi berikutnya","success");
+      } else if (allLessonsDone && relatedAssignments.length>0) {
+        setActiveTab("tugas");
+        show("Semua materi selesai, lanjut ke tugas kelas","success");
       } else {
         show("Progres tersimpan","success");
       }
@@ -65,6 +77,11 @@ export default function KelasDetailPage() {
     const lessonIds = new Set(lessons.map((lesson)=>lesson.id));
     return (assignments ?? []).filter((assignment)=>assignment.lesson_id && lessonIds.has(assignment.lesson_id));
   },[assignments,lessons]);
+  const assignmentsByLesson = useMemo(()=>relatedAssignments.reduce<Record<string, Assignment[]>>((acc, assignment)=>{
+    if (!assignment.lesson_id) return acc;
+    (acc[assignment.lesson_id] ??= []).push(assignment);
+    return acc;
+  },{}),[relatedAssignments]);
   const assignmentCounts = useMemo(()=>({
     total: relatedAssignments.length,
     pending: relatedAssignments.filter((assignment)=>tabOf(assignment)==="pending").length,
@@ -79,6 +96,8 @@ export default function KelasDetailPage() {
   const nextLesson = activeIndex>=0 && activeIndex<c.lessons.length-1 ? c.lessons[activeIndex+1] : null;
   const completedCount = c.lessons.filter((lesson)=>done[lesson.id]).length;
   const percent = c.lessons.length ? Math.round((completedCount/c.lessons.length)*100) : 0;
+  const activeLessonAssignments = activeLesson ? assignmentsByLesson[activeLesson.id] ?? [] : [];
+  const touchedTaskPercent = assignmentCounts.total ? Math.round(((assignmentCounts.submitted + assignmentCounts.graded)/assignmentCounts.total)*100) : 0;
   return (<div>
     <Link href="/kelas" className="text-sm text-navy-600 hover:underline">← Kembali ke kelas</Link>
     <h1 className="mt-3 text-2xl font-bold text-navy-900">{c.title}</h1>
@@ -95,20 +114,59 @@ export default function KelasDetailPage() {
     <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div>
         {activeTab==="materi" && activeLesson ? (
-          <LessonViewer
-            lesson={activeLesson}
-            lessonNumber={c.lessons.findIndex((lesson)=>lesson.id===activeLesson.id)+1}
-            totalLessons={c.lessons.length}
-            completedLessons={completedCount}
-            completed={Boolean(done[activeLesson.id])}
-            busy={busy===activeLesson.id}
-            onComplete={()=>complete(activeLesson.id)}
-            completeLabel={nextLesson ? "Selesai & lanjut" : "Tandai selesai"}
-            onPrev={prevLesson ? ()=>setActiveId(prevLesson.id) : undefined}
-            onNext={nextLesson ? ()=>setActiveId(nextLesson.id) : undefined}
-            hasPrev={Boolean(prevLesson)}
-            hasNext={Boolean(nextLesson)}
-          />
+          <div className="space-y-5">
+            <LessonViewer
+              lesson={activeLesson}
+              lessonNumber={c.lessons.findIndex((lesson)=>lesson.id===activeLesson.id)+1}
+              totalLessons={c.lessons.length}
+              completedLessons={completedCount}
+              completed={Boolean(done[activeLesson.id])}
+              busy={busy===activeLesson.id}
+              onComplete={()=>complete(activeLesson.id)}
+              completeLabel={nextLesson ? "Selesai & lanjut" : relatedAssignments.length>0 ? "Selesai & buka tugas" : "Tandai selesai"}
+              onPrev={prevLesson ? ()=>setActiveId(prevLesson.id) : undefined}
+              onNext={nextLesson ? ()=>setActiveId(nextLesson.id) : undefined}
+              hasPrev={Boolean(prevLesson)}
+              hasNext={Boolean(nextLesson)}
+            />
+            {activeLessonAssignments.length>0 && (
+              <section className="rounded-[28px] border border-gold-100 bg-gradient-to-br from-gold-50 via-white to-white p-5 shadow-soft sm:p-6">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Tugas setelah materi ini</p>
+                    <h3 className="mt-2 text-lg font-semibold text-navy-900">
+                      {Boolean(done[activeLesson.id]) ? "Materi sudah selesai, lanjutkan ke tugas terkait." : "Setelah memahami materi ini, lanjut kerjakan tugas berikut."}
+                    </h3>
+                  </div>
+                  <Badge tone="gold">{activeLessonAssignments.length} tugas terkait</Badge>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {activeLessonAssignments.map((assignment)=>{
+                    const meta = assignmentStatusMeta(assignment);
+                    return (
+                      <Link key={assignment.id} href={`/student/assignments/${assignment.id}`} className="block rounded-[22px] border border-gold-100 bg-white p-4 transition hover:border-gold-300 hover:bg-gold-50/30">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-navy-900">{assignment.title}</p>
+                            <p className="mt-1 text-sm text-navy-600">Tenggat {fmt(assignment.due_date)} · Nilai maks {assignment.max_score}</p>
+                          </div>
+                          <Badge tone={meta.tone}>{meta.label}</Badge>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button onClick={()=>setActiveTab("tugas")} className="rounded-full bg-navy-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-800">
+                    Lihat tab Tugas
+                  </button>
+                  <Link href="/student/assignments" className="rounded-full border border-navy-100 px-4 py-2 text-sm font-semibold text-navy-900 transition hover:bg-navy-50">
+                    Semua tugas siswa
+                  </Link>
+                </div>
+              </section>
+            )}
+          </div>
         ) : activeTab==="materi" ? (
           <div className="rounded-[28px] border border-dashed border-navy-200 bg-white p-6 text-sm text-navy-600">
             Materi untuk kelas ini belum tersedia.
@@ -132,9 +190,9 @@ export default function KelasDetailPage() {
               </div>
             )}
             <div className="mt-5 space-y-4">
-              {relatedAssignments.map((assignment)=>{
-                const status = tabOf(assignment);
+            {relatedAssignments.map((assignment)=>{
                 const overdue = isOverdue(assignment);
+                const meta = assignmentStatusMeta(assignment);
                 const relatedLessonTitle = assignment.lesson_id ? lessonTitleMap[assignment.lesson_id] : null;
                 return (
                   <Link key={assignment.id} href={`/student/assignments/${assignment.id}`} className="block rounded-[24px] border border-navy-100 bg-white p-5 transition hover:border-gold-300 hover:bg-gold-50/30">
@@ -150,9 +208,7 @@ export default function KelasDetailPage() {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {status==="pending" && <Badge tone={overdue?"red":"gold"}>{overdue?"Segera kerjakan":"Siap dikerjakan"}</Badge>}
-                        {status==="submitted" && <Badge tone="gray">Menunggu nilai</Badge>}
-                        {status==="graded" && <Badge tone="green">Sudah dinilai</Badge>}
+                        <Badge tone={meta.tone}>{meta.label}</Badge>
                       </div>
                     </div>
                   </Link>
@@ -180,7 +236,24 @@ export default function KelasDetailPage() {
           {activeTab==="tugas" && <p className="mt-2 text-xs font-semibold text-gold-700">Buka tugas yang terkait langsung dengan lesson di kelas ini.</p>}
         </div>
         {activeTab==="materi" ? (
-          <ol className="space-y-3">
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
+              <p className="text-sm font-semibold text-navy-900">Checklist belajar</p>
+              <div className="mt-3 space-y-2">
+                {c.lessons.map((lesson, index)=>(
+                  <button key={lesson.id} onClick={()=>setActiveId(lesson.id)} className="flex w-full items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 text-left transition hover:bg-gold-50/40">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-navy-900">{index+1}. {lesson.title}</p>
+                      {assignmentsByLesson[lesson.id]?.length ? <p className="mt-1 text-xs font-medium text-gold-700">{assignmentsByLesson[lesson.id].length} tugas menunggu setelah materi ini</p> : null}
+                    </div>
+                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${done[lesson.id] ? "bg-emerald-50 text-emerald-700" : "bg-navy-50 text-navy-600"}`}>
+                      {done[lesson.id] ? "Selesai" : "Belum"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <ol className="space-y-3">
             {c.lessons.map((l,i)=>(<li key={l.id}>
               <button onClick={()=>setActiveId(l.id)} className={`w-full rounded-2xl border p-4 text-left transition ${activeLesson?.id===l.id?"border-gold-400 bg-gold-50/60":"border-navy-100 bg-white hover:bg-navy-50"}`}>
                 <div className="flex items-start gap-3">
@@ -188,13 +261,17 @@ export default function KelasDetailPage() {
                   <div className="min-w-0">
                     <p className="font-medium text-navy-900">{l.title}</p>
                     <p className="mt-1 text-xs text-navy-600">{T[l.content_type]}{l.duration_minutes?` · ${l.duration_minutes} menit`:""}</p>
-                    <p className={`mt-2 text-xs font-semibold ${done[l.id]?"text-emerald-700":"text-navy-500"}`}>{done[l.id]?"Sudah selesai":"Belum selesai"}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <p className={`text-xs font-semibold ${done[l.id]?"text-emerald-700":"text-navy-500"}`}>{done[l.id]?"Sudah selesai":"Belum selesai"}</p>
+                      {assignmentsByLesson[l.id]?.length ? <Badge tone="gold">{assignmentsByLesson[l.id].length} tugas</Badge> : null}
+                    </div>
                     {activeLesson?.id===l.id && <p className="mt-1 text-[11px] font-semibold text-gold-700">Sedang dibuka</p>}
                   </div>
                 </div>
               </button>
             </li>))}
-          </ol>
+            </ol>
+          </div>
         ) : (
           <div className="space-y-3">
             <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
