@@ -59,6 +59,18 @@ export default function KelasDetailPage() {
       }
     }
     catch { show("Gagal menyimpan progres","error"); } finally { setBusy(null); } }
+  const lessons = c?.lessons ?? [];
+  const lessonTitleMap = useMemo(()=>Object.fromEntries(lessons.map((lesson)=>[lesson.id, lesson.title])),[lessons]);
+  const relatedAssignments = useMemo(()=>{
+    const lessonIds = new Set(lessons.map((lesson)=>lesson.id));
+    return (assignments ?? []).filter((assignment)=>assignment.lesson_id && lessonIds.has(assignment.lesson_id));
+  },[assignments,lessons]);
+  const assignmentCounts = useMemo(()=>({
+    total: relatedAssignments.length,
+    pending: relatedAssignments.filter((assignment)=>tabOf(assignment)==="pending").length,
+    submitted: relatedAssignments.filter((assignment)=>tabOf(assignment)==="submitted").length,
+    graded: relatedAssignments.filter((assignment)=>tabOf(assignment)==="graded").length,
+  }),[relatedAssignments]);
   if (err) return <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>;
   if (!c) return <Spinner />;
   const activeLesson = c.lessons.find((lesson)=>lesson.id===activeId) ?? c.lessons[0] ?? null;
@@ -67,17 +79,6 @@ export default function KelasDetailPage() {
   const nextLesson = activeIndex>=0 && activeIndex<c.lessons.length-1 ? c.lessons[activeIndex+1] : null;
   const completedCount = c.lessons.filter((lesson)=>done[lesson.id]).length;
   const percent = c.lessons.length ? Math.round((completedCount/c.lessons.length)*100) : 0;
-  const lessonTitleMap = useMemo(()=>Object.fromEntries(c.lessons.map((lesson)=>[lesson.id, lesson.title])),[c.lessons]);
-  const relatedAssignments = useMemo(()=>{
-    const lessonIds = new Set(c.lessons.map((lesson)=>lesson.id));
-    return (assignments ?? []).filter((assignment)=>assignment.lesson_id && lessonIds.has(assignment.lesson_id));
-  },[assignments,c.lessons]);
-  const assignmentCounts = useMemo(()=>({
-    total: relatedAssignments.length,
-    pending: relatedAssignments.filter((assignment)=>tabOf(assignment)==="pending").length,
-    submitted: relatedAssignments.filter((assignment)=>tabOf(assignment)==="submitted").length,
-    graded: relatedAssignments.filter((assignment)=>tabOf(assignment)==="graded").length,
-  }),[relatedAssignments]);
   return (<div>
     <Link href="/kelas" className="text-sm text-navy-600 hover:underline">← Kembali ke kelas</Link>
     <h1 className="mt-3 text-2xl font-bold text-navy-900">{c.title}</h1>
