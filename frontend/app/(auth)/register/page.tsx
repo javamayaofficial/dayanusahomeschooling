@@ -17,7 +17,7 @@ export default function RegisterPage() {
     try { const u=await register({full_name:form.full_name,email:form.email,password:form.password,role:form.role,...(form.role==="siswa"?{paket:form.paket}:{})}); router.push(dashboardPathFor(u.role)); }
     catch(err){ setError(err instanceof ApiError ? err.message : "Gagal mendaftar."); } finally{ setLoading(false); } }
   return (<div className="grid gap-6 lg:grid-cols-[minmax(0,1.02fr)_460px]">
-    <section className="overflow-hidden rounded-[32px] border border-navy-100 bg-gradient-to-br from-navy-900 via-navy-900 to-[#173b68] p-6 text-white shadow-soft sm:p-8">
+    <section className="order-2 overflow-hidden rounded-[32px] border border-navy-100 bg-gradient-to-br from-navy-900 via-navy-900 to-[#173b68] p-6 text-white shadow-soft sm:p-8 lg:order-1">
       <Badge tone="gold">Mulai perjalanan belajar</Badge>
       <h1 className="mt-4 max-w-2xl text-3xl font-bold leading-tight sm:text-4xl">Buat akun Dayanusa untuk membuka jalur ijazah, skill, dan portofolio dalam satu sistem.</h1>
       <p className="mt-4 max-w-2xl text-sm leading-7 text-white/80 sm:text-base">Setelah terdaftar, siswa bisa langsung masuk ke dashboard belajar, orang tua memantau progres, dan tutor mengawal tugas serta feedback.</p>
@@ -47,7 +47,7 @@ export default function RegisterPage() {
         </div>
       </div>
     </section>
-    <section className="rounded-[32px] border border-navy-100 bg-white p-6 shadow-soft sm:p-8">
+    <section className="order-1 rounded-[32px] border border-navy-100 bg-white p-6 shadow-soft sm:p-8 lg:order-2">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Registrasi</p>
       <h2 className="mt-2 text-2xl font-bold text-navy-900">Daftar akun baru</h2>
       <p className="mt-2 text-sm leading-6 text-navy-600">Isi data dasar di bawah ini. Setelah akun dibuat, sistem akan langsung mengarahkanmu ke dashboard sesuai peran.</p>

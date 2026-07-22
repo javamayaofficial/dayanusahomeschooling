@@ -165,7 +165,7 @@ export default function StudentDashboard() {
     );
     return agenda.slice(0,3);
   },[portfolios,primaryFocus,progressItems,upcoming]);
-  return (<div>
+  return (<div className={primaryFocus ? "pb-28 sm:pb-32" : undefined}>
     <div className="flex items-center justify-between gap-4">
       <div><h1 className="text-2xl font-bold text-navy-900">Halo, {user?.full_name.split(" ")[0]} 👋</h1>
         <p className="mt-1 text-navy-600">Ini ringkasan belajarmu di Dayanusa.</p></div>
@@ -312,13 +312,13 @@ export default function StudentDashboard() {
     </div>
     {primaryFocus && (
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 px-4">
-        <div className="pointer-events-auto mx-auto flex w-full max-w-4xl items-center justify-between gap-3 rounded-full border border-navy-100 bg-white/95 px-4 py-3 shadow-[0_18px_40px_rgba(7,23,49,0.14)] backdrop-blur">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-4xl flex-col items-start gap-3 rounded-[24px] border border-navy-100 bg-white/95 px-4 py-3 shadow-[0_18px_40px_rgba(7,23,49,0.14)] backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:rounded-full">
           <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-700">Quick resume</p>
             <p className="truncate text-sm font-semibold text-navy-900">{primaryFocus.detail.title}</p>
             <p className="truncate text-xs text-navy-600">{primaryFocus.journey.nextStep}</p>
           </div>
-          <Link href={`/kelas/${primaryFocus.detail.id}`} className="shrink-0 rounded-full bg-navy-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-800">
+          <Link href={`/kelas/${primaryFocus.detail.id}`} className="w-full shrink-0 rounded-full bg-navy-900 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-navy-800 sm:w-auto">
             Lanjut belajar
           </Link>
         </div>

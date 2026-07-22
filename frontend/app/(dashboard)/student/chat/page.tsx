@@ -169,7 +169,7 @@ function ChatPage() {
   return (
     <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
       {/* Sidebar sesi */}
-      <aside className="rounded-xl2 border border-navy-100 bg-white p-3 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto">
+      <aside className="order-2 rounded-xl2 border border-navy-100 bg-white p-3 lg:order-1 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto">
         <div className="mb-3 rounded-[24px] border border-gold-100 bg-gradient-to-br from-gold-50 via-white to-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Workspace Guru AI</p>
           <h2 className="mt-2 text-base font-semibold text-navy-900">Copilot belajar yang selalu siap lanjut dari konteksmu</h2>
@@ -202,7 +202,7 @@ function ChatPage() {
       </aside>
 
       {/* Panel chat */}
-      <section className="flex flex-col rounded-xl2 border border-navy-100 bg-white lg:h-[calc(100vh-8rem)]">
+      <section className="order-1 flex flex-col rounded-xl2 border border-navy-100 bg-white lg:order-2 lg:h-[calc(100vh-8rem)]">
         <div className="border-b border-navy-100 px-5 py-4">
           <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-900 text-sm font-bold text-gold">AI</div>
@@ -279,7 +279,7 @@ function ChatPage() {
 
         {/* Input */}
         <div className="sticky bottom-0 border-t border-navy-100 bg-white/95 p-3 backdrop-blur sm:p-4">
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="mb-3 hidden flex-wrap gap-2 sm:flex">
             {promptChips.slice(0,4).map((item)=>(
               <button
                 key={item.title}
@@ -290,7 +290,7 @@ function ChatPage() {
               </button>
             ))}
           </div>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-navy-100 bg-navy-50/50 px-4 py-3 text-xs text-navy-600">
+          <div className="mb-3 hidden flex-wrap items-center justify-between gap-3 rounded-[22px] border border-navy-100 bg-navy-50/50 px-4 py-3 text-xs text-navy-600 sm:flex">
             <p>{streaming ? "Guru AI sedang memproses pertanyaanmu dengan konteks percakapan aktif." : "Composer tetap terlihat agar kamu bisa lanjut belajar tanpa kehilangan konteks."}</p>
             <Badge tone="navy">Enter kirim</Badge>
           </div>

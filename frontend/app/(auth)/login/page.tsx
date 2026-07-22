@@ -15,7 +15,7 @@ export default function LoginPage() {
     try { const u=await login({email,password}); router.push(dashboardPathFor(u.role)); }
     catch(err){ setError(err instanceof ApiError ? err.message : "Gagal masuk."); } finally{ setLoading(false); } }
   return (<div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_420px]">
-    <section className="overflow-hidden rounded-[32px] border border-navy-100 bg-gradient-to-br from-white via-[#fffdfa] to-gold-50/60 p-6 shadow-soft sm:p-8">
+    <section className="order-2 overflow-hidden rounded-[32px] border border-navy-100 bg-gradient-to-br from-white via-[#fffdfa] to-gold-50/60 p-6 shadow-soft sm:p-8 lg:order-1">
       <Badge tone="gold">Portal belajar premium</Badge>
       <h1 className="mt-4 max-w-2xl text-3xl font-bold leading-tight text-navy-900 sm:text-4xl">Masuk ke Dayanusa dan lanjutkan ritme belajar tanpa kehilangan progres.</h1>
       <p className="mt-4 max-w-2xl text-sm leading-7 text-navy-600 sm:text-base">Satu akun untuk mengakses modul PKBM, kelas soft skill, tugas praktik, portofolio karya, dan pendampingan Guru AI yang selalu siap membantu.</p>
@@ -54,7 +54,7 @@ export default function LoginPage() {
         </div>
       </div>
     </section>
-    <section className="rounded-[32px] border border-navy-100 bg-white p-6 shadow-soft sm:p-8">
+    <section className="order-1 rounded-[32px] border border-navy-100 bg-white p-6 shadow-soft sm:p-8 lg:order-2">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Masuk</p>
       <h2 className="mt-2 text-2xl font-bold text-navy-900">Lanjutkan belajar di Dayanusa.</h2>
       <p className="mt-2 text-sm leading-6 text-navy-600">Gunakan akun yang sudah terdaftar untuk kembali ke dashboard sesuai peranmu.</p>
