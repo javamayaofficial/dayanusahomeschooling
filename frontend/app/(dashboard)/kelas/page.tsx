@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { getAssignments } from "@/lib/assignments";
+import { buildClassJourney, type ClassJourney } from "@/lib/class-progress";
 import { getMyProgress, getSoftSkill, getSoftSkills } from "@/lib/learning";
 import ProgressBar from "@/components/ProgressBar";
 import Spinner from "@/components/ui/Spinner";
@@ -9,80 +10,9 @@ import Badge from "@/components/ui/Badge";
 import type { Assignment, ProgressItem, SkillClass, SkillClassDetail } from "@/types";
 const CAT:Record<string,string>={digital_marketing:"Digital Marketing",content_creator:"Content Creator",product_creator:"Product Creator"};
 const LVL:Record<string,string>={beginner:"Pemula",intermediate:"Menengah",advanced:"Lanjutan"};
-type Journey = {
-  totalLessons:number;
-  completedLessons:number;
-  percent:number;
-  totalAssignments:number;
-  pendingAssignments:number;
-  gradedAssignments:number;
-  nextStep:string;
-  tone:"green"|"gold"|"navy";
-};
-function buildJourney(skillClass: SkillClassDetail, progress: ProgressItem[], assignments: Assignment[]): Journey {
-  const lessonIds = new Set(skillClass.lessons.map((lesson)=>lesson.id));
-  const completedLessonIds = new Set(
-    progress
-      .filter((item)=>item.content_kind==="skill_lesson" && item.status==="completed" && lessonIds.has(item.content_id))
-      .map((item)=>item.content_id),
-  );
-  const relatedAssignments = assignments.filter((assignment)=>assignment.lesson_id && lessonIds.has(assignment.lesson_id));
-  const pendingAssignments = relatedAssignments.filter((assignment)=>!assignment.my_submission).length;
-  const gradedAssignments = relatedAssignments.filter((assignment)=>assignment.my_submission?.status==="graded").length;
-  const totalLessons = skillClass.lessons.length;
-  const completedLessons = completedLessonIds.size;
-  const percent = totalLessons ? Math.round((completedLessons/totalLessons)*100) : 0;
-  if (!totalLessons) return { totalLessons, completedLessons, percent, totalAssignments: relatedAssignments.length, pendingAssignments, gradedAssignments, nextStep:"Materi segera hadir di kelas ini.", tone:"navy" };
-  if (completedLessons < totalLessons) {
-    return {
-      totalLessons,
-      completedLessons,
-      percent,
-      totalAssignments: relatedAssignments.length,
-      pendingAssignments,
-      gradedAssignments,
-      nextStep:`Lanjutkan ${skillClass.lessons[completedLessons]?.title ?? "materi berikutnya"}.`,
-      tone:"gold",
-    };
-  }
-  if (relatedAssignments.length > 0 && pendingAssignments > 0) {
-    return {
-      totalLessons,
-      completedLessons,
-      percent,
-      totalAssignments: relatedAssignments.length,
-      pendingAssignments,
-      gradedAssignments,
-      nextStep:`Semua materi selesai. Kerjakan ${pendingAssignments} tugas yang tersisa.`,
-      tone:"navy",
-    };
-  }
-  if (gradedAssignments > 0) {
-    return {
-      totalLessons,
-      completedLessons,
-      percent,
-      totalAssignments: relatedAssignments.length,
-      pendingAssignments,
-      gradedAssignments,
-      nextStep:"Sebagian tugas sudah dinilai. Lihat hasil dan feedback tutor.",
-      tone:"green",
-    };
-  }
-  return {
-    totalLessons,
-    completedLessons,
-    percent,
-    totalAssignments: relatedAssignments.length,
-    pendingAssignments,
-    gradedAssignments,
-    nextStep: relatedAssignments.length ? "Materi selesai. Pantau status tugas di kelas ini." : "Materi kelas sudah selesai dipelajari.",
-    tone:"green",
-  };
-}
 export default function KelasListPage() {
   const [cs,setCs]=useState<SkillClass[]|null>(null); const [err,setErr]=useState<string|null>(null);
-  const [journeyByClass,setJourneyByClass]=useState<Record<string, Journey>>({});
+  const [journeyByClass,setJourneyByClass]=useState<Record<string, ClassJourney>>({});
   useEffect(()=>{
     let cancelled=false;
     Promise.all([getSoftSkills(), getMyProgress().catch(()=>[]), getAssignments().catch(()=>[])])
@@ -97,9 +27,9 @@ export default function KelasListPage() {
           }
         }));
         if (cancelled) return;
-        const nextJourney = details.reduce<Record<string, Journey>>((acc, detail)=>{
+        const nextJourney = details.reduce<Record<string, ClassJourney>>((acc, detail)=>{
           if (!detail) return acc;
-          acc[detail.id] = buildJourney(detail, progress, assignments);
+          acc[detail.id] = buildClassJourney(detail, progress, assignments);
           return acc;
         },{});
         setJourneyByClass(nextJourney);
@@ -107,7 +37,7 @@ export default function KelasListPage() {
       .catch(()=>setErr("Gagal memuat kelas."));
     return ()=>{ cancelled=true; };
   },[]);
-  const featured = useMemo(()=>cs?.map((skillClass)=>({ skillClass, journey: journeyByClass[skillClass.id] })).sort((a,b)=>(a.journey?.percent ?? 0)-(b.journey?.percent ?? 0)) ?? [],[cs,journeyByClass]);
+  const featured = useMemo(()=>cs?.map((skillClass)=>({ skillClass, journey: journeyByClass[skillClass.id] })).sort((a,b)=>(a.journey?.combinedPercent ?? 0)-(b.journey?.combinedPercent ?? 0)) ?? [],[cs,journeyByClass]);
   return (<div>
     <h1 className="text-2xl font-bold text-navy-900">Kelas Soft Skill</h1>
     <p className="mt-1 text-navy-600">Vokasi berbasis SKKNI — jalur sertifikasi BNSP.</p>
@@ -148,10 +78,11 @@ export default function KelasListPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge>{LVL[c.level]??c.level}</Badge>
               {c.is_bnsp_certified && <Badge tone="gold">BNSP</Badge>}
-              {journey && <Badge tone={journey.tone}>{journey.percent}% materi</Badge>}
+              {journey && <Badge tone={journey.stageTone}>{journey.stageLabel}</Badge>}
+              {journey && <Badge tone="navy">{journey.combinedPercent}% total</Badge>}
             </div>
             <div className="mt-4">
-              <ProgressBar percent={journey?.percent ?? 0} />
+              <ProgressBar percent={journey?.combinedPercent ?? 0} />
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
               <div className="rounded-2xl bg-navy-50/70 px-2 py-3">
@@ -163,8 +94,8 @@ export default function KelasListPage() {
                 <p className="mt-1 text-navy-600">Tugas tersisa</p>
               </div>
               <div className="rounded-2xl bg-navy-50/70 px-2 py-3">
-                <p className="font-semibold text-navy-900">{journey?.gradedAssignments ?? 0}</p>
-                <p className="mt-1 text-navy-600">Sudah dinilai</p>
+                <p className="font-semibold text-navy-900">{journey?.stageLabel ?? "Belajar"}</p>
+                <p className="mt-1 text-navy-600">Status</p>
               </div>
             </div>
             <div className="mt-4 rounded-2xl border border-gold-100 bg-gold-50/60 p-3">

@@ -2,13 +2,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
+import { buildClassJourney, type ClassJourney } from "@/lib/class-progress";
 import { getDashboard, getMyProgress, getSoftSkill, getSoftSkills } from "@/lib/learning";
 import { getAssignments, tabOf } from "@/lib/assignments";
 import { getMyPortfolios } from "@/lib/portfolio";
 import ProgressBar from "@/components/ProgressBar";
 import Badge from "@/components/ui/Badge";
 import MediaPreview from "@/components/MediaPreview";
-import type { Assignment, DashboardSummary, Portfolio, ProgressItem, SkillClass, SkillClassDetail } from "@/types";
+import type { Assignment, DashboardSummary, Portfolio, SkillClass, SkillClassDetail } from "@/types";
 function daysLeft(iso: string): { text: string; tone: "red"|"gold"|"navy" } {
   const d = Math.ceil((new Date(iso).getTime() - Date.now())/86400000);
   if (d < 0) return { text:"Terlambat", tone:"red" };
@@ -22,7 +23,7 @@ export default function StudentDashboard() {
   const [assignments,setAssignments]=useState<Assignment[]>([]);
   const [portfolios,setPortfolios]=useState<Portfolio[]>([]);
   const [classes,setClasses]=useState<SkillClass[]>([]);
-  const [classFocus,setClassFocus]=useState<Array<{ detail: SkillClassDetail; progressPercent:number; completedLessons:number; totalLessons:number; pendingAssignments:number; nextStep:string }>>([]);
+  const [classFocus,setClassFocus]=useState<Array<{ detail: SkillClassDetail; journey: ClassJourney }>>([]);
   useEffect(()=>{
     let cancelled=false;
     getDashboard().then(setSummary).catch(()=>{});
@@ -43,26 +44,12 @@ export default function StudentDashboard() {
         const nextFocus = details
           .filter((detail): detail is SkillClassDetail => Boolean(detail))
           .map((detail)=>{
-            const lessonIds = new Set(detail.lessons.map((lesson)=>lesson.id));
-            const completedLessons = new Set(
-              (progress as ProgressItem[])
-                .filter((item)=>item.content_kind==="skill_lesson" && item.status==="completed" && lessonIds.has(item.content_id))
-                .map((item)=>item.content_id),
-            ).size;
-            const relatedAssignments = (assignmentItems as Assignment[]).filter((assignment)=>assignment.lesson_id && lessonIds.has(assignment.lesson_id));
-            const pendingAssignments = relatedAssignments.filter((assignment)=>!assignment.my_submission).length;
-            const totalLessons = detail.lessons.length;
-            const progressPercent = totalLessons ? Math.round((completedLessons/totalLessons)*100) : 0;
-            const nextStep = completedLessons < totalLessons
-              ? `Lanjutkan materi ke-${completedLessons + 1} di kelas ini.`
-              : pendingAssignments > 0
-                ? `Kerjakan ${pendingAssignments} tugas yang masih menunggu.`
-                : "Pantau nilai dan feedback tutor untuk kelas ini.";
-            return { detail, progressPercent, completedLessons, totalLessons, pendingAssignments, nextStep };
+            const journey = buildClassJourney(detail, progress, assignmentItems);
+            return { detail, journey };
           })
           .sort((a,b)=>{
-            if (a.progressPercent===b.progressPercent) return b.pendingAssignments-a.pendingAssignments;
-            return a.progressPercent-b.progressPercent;
+            if (a.journey.combinedPercent===b.journey.combinedPercent) return b.journey.pendingAssignments-a.journey.pendingAssignments;
+            return a.journey.combinedPercent-b.journey.combinedPercent;
           })
           .slice(0,3);
         setClassFocus(nextFocus);
@@ -76,7 +63,7 @@ export default function StudentDashboard() {
   const dashboardFocusText = useMemo(()=>{
     if (!classFocus.length) return "Mulai dari kelas yang paling dekat dengan progresmu saat ini.";
     const active = classFocus[0];
-    return `${active.detail.title}: ${active.nextStep}`;
+    return `${active.detail.title}: ${active.journey.nextStep}`;
   },[classFocus]);
   return (<div>
     <div className="flex items-center justify-between gap-4">
@@ -109,26 +96,29 @@ export default function StudentDashboard() {
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Kelas aktif</p>
                 <h3 className="mt-2 font-semibold text-navy-900">{item.detail.title}</h3>
               </div>
-              <Badge tone={item.progressPercent===100?"green":item.pendingAssignments>0?"gold":"navy"}>{item.progressPercent}% selesai</Badge>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Badge tone={item.journey.stageTone}>{item.journey.stageLabel}</Badge>
+                <Badge tone="navy">{item.journey.combinedPercent}% total</Badge>
+              </div>
             </div>
-            <div className="mt-4"><ProgressBar percent={item.progressPercent} /></div>
+            <div className="mt-4"><ProgressBar percent={item.journey.combinedPercent} /></div>
             <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
               <div className="rounded-2xl bg-white px-2 py-3">
-                <p className="font-semibold text-navy-900">{item.completedLessons}/{item.totalLessons}</p>
+                <p className="font-semibold text-navy-900">{item.journey.completedLessons}/{item.journey.totalLessons}</p>
                 <p className="mt-1 text-navy-600">Materi</p>
               </div>
               <div className="rounded-2xl bg-white px-2 py-3">
-                <p className="font-semibold text-navy-900">{item.pendingAssignments}</p>
+                <p className="font-semibold text-navy-900">{item.journey.pendingAssignments}</p>
                 <p className="mt-1 text-navy-600">Tugas</p>
               </div>
               <div className="rounded-2xl bg-white px-2 py-3">
-                <p className="font-semibold text-navy-900">{item.progressPercent===100 && item.pendingAssignments===0 ? "Siap" : "Lanjut"}</p>
+                <p className="font-semibold text-navy-900">{item.journey.stageLabel}</p>
                 <p className="mt-1 text-navy-600">Status</p>
               </div>
             </div>
             <div className="mt-4 rounded-2xl border border-gold-100 bg-gold-50/70 p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Langkah berikutnya</p>
-              <p className="mt-1 text-sm text-navy-700">{item.nextStep}</p>
+              <p className="mt-1 text-sm text-navy-700">{item.journey.nextStep}</p>
             </div>
           </Link>
         ))}

@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { buildClassJourney } from "@/lib/class-progress";
 import { getMyProgress, getSoftSkill, markProgress } from "@/lib/learning";
 import { getAssignments, isOverdue, tabOf } from "@/lib/assignments";
 import { useToast } from "@/lib/toast";
@@ -107,6 +108,7 @@ export default function KelasDetailPage() {
   const anyTaskTouched = assignmentCounts.submitted + assignmentCounts.graded > 0;
   const allTasksSubmitted = assignmentCounts.total > 0 && assignmentCounts.pending === 0;
   const hasGradedTask = assignmentCounts.graded > 0;
+  const classJourney = buildClassJourney(c, Object.entries(done).filter(([, value])=>value).map(([content_id])=>({ id: content_id, content_id, content_kind:"skill_lesson", status:"completed" as const })), relatedAssignments);
   const currentFocus = !allLessonsDone
     ? "Selesaikan materi aktif untuk membuka langkah belajar berikutnya."
     : assignmentCounts.total > 0 && !anyTaskTouched
@@ -130,8 +132,10 @@ export default function KelasDetailPage() {
         </div>
         <div className="rounded-[22px] border border-gold-100 bg-gold-50/70 px-4 py-3 text-right">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Status kelas</p>
-          <p className="mt-1 text-2xl font-bold text-navy-900">{Math.round((percent + touchedTaskPercent) / 2)}%</p>
-          <p className="text-xs text-navy-600">gabungan materi & tugas</p>
+          <p className="mt-1 text-2xl font-bold text-navy-900">{classJourney.combinedPercent}%</p>
+          <div className="mt-2 flex justify-end">
+            <Badge tone={classJourney.stageTone}>{classJourney.stageLabel}</Badge>
+          </div>
         </div>
       </div>
       <div className="mt-5 grid gap-3 md:grid-cols-3">
