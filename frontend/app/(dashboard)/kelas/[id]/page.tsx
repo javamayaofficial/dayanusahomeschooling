@@ -7,6 +7,7 @@ import { getMyProgress, getSoftSkill, markProgress } from "@/lib/learning";
 import { getAssignments, isOverdue, tabOf } from "@/lib/assignments";
 import { useToast } from "@/lib/toast";
 import LessonViewer from "@/components/LessonViewer";
+import ProgressBar from "@/components/ProgressBar";
 import Badge from "@/components/ui/Badge";
 import Spinner from "@/components/ui/Spinner";
 import type { Assignment, SkillClassDetail } from "@/types";
@@ -26,6 +27,14 @@ function boardTone(status:"done"|"active"|"upcoming"){
   if (status==="active") return "border-gold-200 bg-gold-50/80";
   return "border-navy-100 bg-white";
 }
+function milestoneTone(status:"done"|"active"|"upcoming"){
+  if (status==="done") return "border-emerald-100 bg-emerald-50/80 text-emerald-700";
+  if (status==="active") return "border-gold-200 bg-gold-50/90 text-gold-800";
+  return "border-navy-100 bg-white text-navy-500";
+}
+type NextAction =
+  | { label:string; helper:string; onClick:()=>void }
+  | { label:string; helper:string; href:string };
 export default function KelasDetailPage() {
   const { id } = useParams<{id:string}>(); const { show } = useToast();
   const [c,setC]=useState<SkillClassDetail|null>(null); const [err,setErr]=useState<string|null>(null);
@@ -109,6 +118,53 @@ export default function KelasDetailPage() {
   const allTasksSubmitted = assignmentCounts.total > 0 && assignmentCounts.pending === 0;
   const hasGradedTask = assignmentCounts.graded > 0;
   const classJourney = buildClassJourney(c, Object.entries(done).filter(([, value])=>value).map(([content_id])=>({ id: content_id, content_id, content_kind:"skill_lesson", status:"completed" as const })), relatedAssignments);
+  const taskTouchPercent = assignmentCounts.total ? Math.round(((assignmentCounts.submitted + assignmentCounts.graded)/assignmentCounts.total)*100) : 0;
+  const certificationReadiness = c.is_bnsp_certified
+    ? allLessonsDone && allTasksSubmitted
+      ? "Semua materi dan tugas inti sudah tuntas. Kelas ini siap masuk fase review portofolio dan penguatan sertifikasi."
+      : allLessonsDone
+        ? "Materi inti sudah tuntas. Lengkapi tugas untuk menutup gap menuju kesiapan sertifikasi."
+        : "Fokus tuntaskan lesson inti agar jalur sertifikasi terasa lebih terarah."
+    : "Kelas ini tetap dirancang untuk membangun skill praktis dan portofolio meski tanpa badge sertifikasi resmi.";
+  const milestoneItems = [
+    {
+      title: "Mulai ritme belajar",
+      description: activeLesson ? `Fokus pada ${activeLesson.title}.` : "Pilih materi pertama untuk mulai belajar.",
+      status: completedCount > 0 ? "done" : "active",
+    },
+    {
+      title: "Tuntaskan semua materi",
+      description: `${completedCount}/${c.lessons.length} materi sudah selesai dipelajari.`,
+      status: allLessonsDone ? "done" : completedCount > 0 ? "active" : "upcoming",
+    },
+    {
+      title: "Kirim tugas kelas",
+      description: assignmentCounts.total===0 ? "Belum ada tugas terkait pada kelas ini." : `${assignmentCounts.pending} tugas masih menunggu dikirim.`,
+      status: assignmentCounts.total===0 ? "done" : allTasksSubmitted ? "done" : allLessonsDone || anyTaskTouched ? "active" : "upcoming",
+    },
+    {
+      title: c.is_bnsp_certified ? "Siap review sertifikasi" : "Siap naik level",
+      description: c.is_bnsp_certified ? "Tutor akan lebih mudah mengecek kesiapan akhir setelah materi dan tugas inti tuntas." : "Gunakan feedback tugas untuk memperkuat hasil belajar dan portofolio.",
+      status: hasGradedTask || (assignmentCounts.total===0 && allLessonsDone) ? "done" : anyTaskTouched || allTasksSubmitted ? "active" : "upcoming",
+    },
+  ] as const;
+  const nextAction: NextAction = !allLessonsDone
+    ? {
+        label: activeLesson ? `Lanjutkan ${activeLesson.title}` : "Mulai materi pertama",
+        helper: "Lanjutkan materi aktif agar progres kelas terus bergerak.",
+        onClick: ()=>setActiveTab("materi"),
+      }
+    : assignmentCounts.pending > 0
+      ? {
+          label: "Buka tugas kelas",
+          helper: "Semua materi inti selesai. Saatnya kirim tugas yang masih tertunda.",
+          onClick: ()=>setActiveTab("tugas"),
+        }
+      : {
+          label: "Lihat semua tugas siswa",
+          helper: hasGradedTask ? "Pantau feedback tutor dan gunakan sebagai bahan penguatan." : "Semua tugas inti sudah disentuh. Pantau progres akhir dari halaman tugas siswa.",
+          href: "/student/assignments",
+        };
   const currentFocus = !allLessonsDone
     ? "Selesaikan materi aktif untuk membuka langkah belajar berikutnya."
     : assignmentCounts.total > 0 && !anyTaskTouched
@@ -160,6 +216,36 @@ export default function KelasDetailPage() {
           <p className="mt-3 text-xs font-semibold text-navy-700">
             {hasGradedTask ? "Gunakan feedback tutor untuk naik level." : anyTaskTouched ? "Menunggu penilaian tutor." : "Nilai dan feedback akan muncul setelah submit."}
           </p>
+        </div>
+      </div>
+      <div className="mt-5 rounded-[24px] border border-navy-100 bg-navy-50/50 p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Milestone kelas</p>
+            <h3 className="mt-2 text-lg font-semibold text-navy-900">Dari lesson pertama sampai siap dinilai tutor</h3>
+          </div>
+          <Badge tone={c.is_bnsp_certified ? "gold" : "gray"}>{c.is_bnsp_certified ? "Jalur BNSP aktif" : "Kelas penguatan skill"}</Badge>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-4">
+          {milestoneItems.map((item, index)=>(
+            <div key={item.title} className={`rounded-[22px] border p-4 ${milestoneTone(item.status)}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em]">Tahap {index+1}</p>
+                <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
+                  item.status==="done"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : item.status==="active"
+                      ? "bg-gold-100 text-gold-800"
+                      : "bg-navy-50 text-navy-500"
+                }`}
+                >
+                  {item.status==="done" ? "✓" : index+1}
+                </span>
+              </div>
+              <p className="mt-3 font-semibold text-navy-900">{item.title}</p>
+              <p className="mt-2 text-sm leading-6 text-navy-600">{item.description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -278,22 +364,51 @@ export default function KelasDetailPage() {
           </section>
         )}
       </div>
-      <aside className="rounded-[28px] border border-navy-100 bg-white p-4 shadow-soft">
+      <aside className="self-start rounded-[28px] border border-navy-100 bg-white p-4 shadow-soft lg:sticky lg:top-24">
         <div className="px-2 pb-3">
-          <h2 className="text-lg font-semibold text-navy-900">{activeTab==="materi"?"Daftar materi":"Ringkasan kelas"}</h2>
+          <h2 className="text-lg font-semibold text-navy-900">{activeTab==="materi"?"Panel kendali kelas":"Ringkasan kelas"}</h2>
           <p className="mt-1 text-sm text-navy-600">
             {activeTab==="materi" ? `${c.lessons.length} materi tersedia · ${completedCount} selesai` : `${assignmentCounts.total} tugas terkait · ${assignmentCounts.pending} belum dikumpulkan`}
           </p>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-navy-100">
-            <div className="h-full rounded-full bg-gradient-to-r from-gold-500 to-navy-700" style={{width:`${activeTab==="materi"?percent:(assignmentCounts.total ? Math.round(((assignmentCounts.submitted + assignmentCounts.graded)/assignmentCounts.total)*100) : 0)}%`}} />
+          <div className="mt-3">
+            <ProgressBar percent={activeTab==="materi"?percent:taskTouchPercent} />
           </div>
           <p className="mt-2 text-xs font-medium text-navy-500">
             {activeTab==="materi"
               ? `${percent}% progres kelas`
-              : `${assignmentCounts.total ? Math.round(((assignmentCounts.submitted + assignmentCounts.graded)/assignmentCounts.total)*100) : 0}% tugas sudah disentuh`}
+              : `${taskTouchPercent}% tugas sudah disentuh`}
           </p>
           {activeTab==="materi" && resumed && <p className="mt-2 text-xs font-semibold text-gold-700">Melanjutkan dari materi terakhir yang dibuka.</p>}
           {activeTab==="tugas" && <p className="mt-2 text-xs font-semibold text-gold-700">Buka tugas yang terkait langsung dengan lesson di kelas ini.</p>}
+        </div>
+        <div className="space-y-3 px-2 pb-4">
+          <div className="rounded-2xl border border-gold-100 bg-gradient-to-br from-gold-50 via-white to-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Aksi utama</p>
+              <Badge tone={classJourney.stageTone}>{classJourney.stageLabel}</Badge>
+            </div>
+            <p className="mt-3 text-base font-semibold text-navy-900">{nextAction.label}</p>
+            <p className="mt-1 text-sm leading-6 text-navy-600">{nextAction.helper}</p>
+            {"href" in nextAction ? (
+              <Link href={nextAction.href} className="mt-4 inline-flex rounded-full bg-navy-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-800">
+                Buka sekarang
+              </Link>
+            ) : (
+              <button onClick={nextAction.onClick} className="mt-4 rounded-full bg-navy-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-800">
+                Buka sekarang
+              </button>
+            )}
+          </div>
+          <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold text-navy-900">Kesiapan kelas</p>
+              <span className="text-sm font-bold text-navy-900">{classJourney.combinedPercent}%</span>
+            </div>
+            <div className="mt-3">
+              <ProgressBar percent={classJourney.combinedPercent} />
+            </div>
+            <p className="mt-3 text-sm leading-6 text-navy-600">{certificationReadiness}</p>
+          </div>
         </div>
         {activeTab==="materi" ? (
           <div className="space-y-4">
@@ -342,6 +457,10 @@ export default function KelasDetailPage() {
                 <div className="rounded-2xl bg-white p-3"><p className="text-navy-500">Sudah dinilai</p><p className="mt-1 text-xl font-bold text-navy-900">{assignmentCounts.graded}</p></div>
                 <div className="rounded-2xl bg-white p-3"><p className="text-navy-500">Total tugas</p><p className="mt-1 text-xl font-bold text-navy-900">{assignmentCounts.total}</p></div>
               </div>
+            </div>
+            <div className="rounded-2xl border border-navy-100 bg-white p-4">
+              <p className="text-sm font-semibold text-navy-900">{c.is_bnsp_certified ? "Jalur sertifikasi" : "Penguatan hasil belajar"}</p>
+              <p className="mt-2 text-sm leading-6 text-navy-600">{certificationReadiness}</p>
             </div>
             <Link href="/student/assignments" className="block rounded-2xl border border-gold-200 bg-gold-50/60 p-4 text-sm font-semibold text-gold-800 transition hover:bg-gold-100/70">
               Lihat semua tugas siswa →
