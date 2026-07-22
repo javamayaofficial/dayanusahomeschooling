@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth";
 import { ToastProvider } from "@/lib/toast";
 
 const BUILD_ID_KEY = "dayanusa-next-build-id";
+const BUILD_ID_PATTERN = /"buildId":"([^"]+)"/;
 
 export default function Providers({ children }:{children:React.ReactNode}) {
   useEffect(()=>{
@@ -11,11 +12,11 @@ export default function Providers({ children }:{children:React.ReactNode}) {
 
     const syncBuild = async () => {
       try {
-        const res = await fetch("/build-info", { cache: "no-store" });
+        const res = await fetch("/", { cache: "no-store" });
         if (!res.ok) return;
 
-        const data = (await res.json()) as { buildId?: string };
-        const nextBuildId = data.buildId?.trim();
+        const html = await res.text();
+        const nextBuildId = html.match(BUILD_ID_PATTERN)?.[1]?.trim();
         if (!nextBuildId || disposed) return;
 
         const currentBuildId = window.localStorage.getItem(BUILD_ID_KEY);
