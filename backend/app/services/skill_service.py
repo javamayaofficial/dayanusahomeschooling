@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from app.models.academic import Lesson, Module
@@ -18,7 +18,9 @@ async def create_class(db, data: SkillClassCreate):
 async def upsert_progress(db, student_id, data: ProgressUpdate):
     s=select(StudentProgress).where(StudentProgress.student_id==student_id, StudentProgress.content_kind==data.content_kind, StudentProgress.content_id==data.content_id)
     p=(await db.execute(s)).scalar_one_or_none()
-    ca=datetime.now(timezone.utc) if data.status==ProgressStatus.COMPLETED else None
+    # Kolom completed_at saat ini bertipe timestamp tanpa timezone di PostgreSQL.
+    # Simpan nilai naive agar asyncpg tidak gagal pada insert/update progres.
+    ca=datetime.utcnow() if data.status==ProgressStatus.COMPLETED else None
     if p: p.status=data.status; p.score=data.score; p.completed_at=ca
     else: p=StudentProgress(student_id=student_id, content_kind=data.content_kind, content_id=data.content_id, status=data.status, score=data.score, completed_at=ca); db.add(p)
     await db.flush(); await db.refresh(p); return p
