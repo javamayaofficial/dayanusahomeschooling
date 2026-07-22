@@ -55,6 +55,7 @@ export default function LessonViewer({
   completed,
   busy,
   onComplete,
+  completeLabel,
   onPrev,
   onNext,
   hasPrev,
@@ -67,6 +68,7 @@ export default function LessonViewer({
   completed: boolean;
   busy: boolean;
   onComplete: () => void;
+  completeLabel?: string;
   onPrev?: () => void;
   onNext?: () => void;
   hasPrev: boolean;
@@ -122,7 +124,7 @@ export default function LessonViewer({
               : "border border-navy-100 text-navy-900 hover:bg-navy-50"
           } disabled:opacity-70`}
         >
-          {completed ? "✓ Selesai" : busy ? "Menyimpan..." : "Tandai selesai"}
+          {completed ? "✓ Selesai" : busy ? "Menyimpan..." : completeLabel ?? "Tandai selesai"}
         </button>
       </div>
 

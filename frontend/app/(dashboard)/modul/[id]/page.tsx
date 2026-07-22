@@ -35,7 +35,16 @@ export default function ModuleDetailPage() {
   },[id]);
   useEffect(()=>{ if (activeId && typeof window!=="undefined") window.localStorage.setItem(`${RESUME_KEY}${id}`, activeId); },[id,activeId]);
   async function complete(lid:string){ setBusy(lid);
-    try { await markProgress("module_lesson", lid); setDone(d=>({...d,[lid]:true})); show("Progres tersimpan","success"); }
+    try {
+      await markProgress("module_lesson", lid);
+      setDone(d=>({...d,[lid]:true}));
+      if (activeLesson?.id===lid && nextLesson) {
+        setActiveId(nextLesson.id);
+        show("Progres tersimpan, lanjut ke materi berikutnya","success");
+      } else {
+        show("Progres tersimpan","success");
+      }
+    }
     catch { show("Gagal menyimpan progres","error"); } finally { setBusy(null); } }
   if (err) return <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{err}</p>;
   if (!m) return <Spinner />;
@@ -61,6 +70,7 @@ export default function ModuleDetailPage() {
             completed={Boolean(done[activeLesson.id])}
             busy={busy===activeLesson.id}
             onComplete={()=>complete(activeLesson.id)}
+            completeLabel={nextLesson ? "Selesai & lanjut" : "Tandai selesai"}
             onPrev={prevLesson ? ()=>setActiveId(prevLesson.id) : undefined}
             onNext={nextLesson ? ()=>setActiveId(nextLesson.id) : undefined}
             hasPrev={Boolean(prevLesson)}
