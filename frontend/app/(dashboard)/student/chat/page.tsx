@@ -1,15 +1,42 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   listSessions, createSession, deleteSession, getHistory, getSuggestions, streamMessage,
 } from "@/lib/chat";
 import { useToast } from "@/lib/toast";
 import Spinner from "@/components/ui/Spinner";
+import Badge from "@/components/ui/Badge";
 import Markdown from "@/components/chat/Markdown";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import type { ChatMessage, ChatSession } from "@/types";
+
+const CONTEXT_CHIPS = [
+  "PKBM",
+  "Soft Skill",
+  "Tugas",
+  "Portofolio",
+];
+
+const PROMPT_PRESETS = [
+  {
+    title: "Minta ringkasan materi",
+    prompt: "Ringkas materi ini jadi poin-poin inti yang mudah dipahami siswa.",
+  },
+  {
+    title: "Bikin latihan cepat",
+    prompt: "Buatkan 5 soal latihan singkat beserta jawabannya.",
+  },
+  {
+    title: "Jelaskan lebih sederhana",
+    prompt: "Jelaskan materi ini dengan bahasa yang lebih sederhana dan contoh nyata.",
+  },
+  {
+    title: "Bantu tugas",
+    prompt: "Bantu saya menyusun langkah mengerjakan tugas ini dengan rapi.",
+  },
+];
 
 function ChatPage() {
   const router = useRouter();
@@ -116,11 +143,47 @@ function ChatPage() {
   }
 
   const empty = !activeId || (messages.length === 0 && !streaming && !loadingHistory);
+  const promptChips = useMemo(()=>{
+    const dynamicPrompts = suggestions.slice(0,4).map((item)=>({ title:item, prompt:item }));
+    return [...PROMPT_PRESETS, ...dynamicPrompts].slice(0,8);
+  },[suggestions]);
+  const activeSession = sessions.find((session)=>session.id===activeId) ?? null;
+  const contextSummary = activeSession?.last_message
+    ? `Topik aktif: ${activeSession.last_message}`
+    : empty
+      ? "Belum ada sesi aktif. Mulai dengan prompt cepat agar Guru AI langsung punya konteks."
+      : "Percakapan aktif siap dilanjutkan dari pesan terakhir.";
+  const suggestedModeText = streaming
+    ? "Guru AI sedang merangkai jawaban berdasarkan konteks materi Dayanusa."
+    : empty
+      ? "Gunakan prompt cepat di bawah untuk memulai arah belajar."
+      : "Pertajam pertanyaanmu dengan konteks tugas, materi, atau target pemahaman.";
+  function usePrompt(prompt: string, sendNow = false) {
+    if (sendNow) {
+      void send(prompt);
+      return;
+    }
+    setInput(prompt);
+  }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
       {/* Sidebar sesi */}
       <aside className="rounded-xl2 border border-navy-100 bg-white p-3 lg:h-[calc(100vh-8rem)] lg:overflow-y-auto">
+        <div className="mb-3 rounded-[24px] border border-gold-100 bg-gradient-to-br from-gold-50 via-white to-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Workspace Guru AI</p>
+          <h2 className="mt-2 text-base font-semibold text-navy-900">Copilot belajar yang selalu siap lanjut dari konteksmu</h2>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-2xl bg-white px-3 py-2">
+              <p className="font-semibold text-navy-900">{sessions.length}</p>
+              <p className="mt-1 text-navy-500">Percakapan</p>
+            </div>
+            <div className="rounded-2xl bg-white px-3 py-2">
+              <p className="font-semibold text-navy-900">{messages.length}</p>
+              <p className="mt-1 text-navy-500">Pesan aktif</p>
+            </div>
+          </div>
+        </div>
         <button onClick={newChat} className="mb-3 w-full rounded-full bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-navy-600">+ Chat Baru</button>
         <div className="space-y-1">
           {sessions.length === 0 && <p className="px-2 py-4 text-center text-xs text-navy-500">Belum ada percakapan.</p>}
@@ -140,9 +203,22 @@ function ChatPage() {
 
       {/* Panel chat */}
       <section className="flex flex-col rounded-xl2 border border-navy-100 bg-white lg:h-[calc(100vh-8rem)]">
-        <div className="flex items-center gap-3 border-b border-navy-100 px-5 py-3">
+        <div className="border-b border-navy-100 px-5 py-4">
+          <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy-900 text-sm font-bold text-gold">AI</div>
-          <div><p className="font-semibold text-navy-900">Guru AI Dayanusa</p><p className="text-xs text-navy-500">Pendamping belajar 24 jam</p></div>
+            <div><p className="font-semibold text-navy-900">Guru AI Dayanusa</p><p className="text-xs text-navy-500">Pendamping belajar 24 jam</p></div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-navy-100 bg-navy-50/50 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Context bar</p>
+              <p className="mt-1 text-sm font-semibold text-navy-900">{activeSession?.title ?? "Siap memulai sesi baru"}</p>
+              <p className="mt-1 text-xs leading-5 text-navy-600">{contextSummary}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {CONTEXT_CHIPS.map((chip)=><Badge key={chip} tone="navy">{chip}</Badge>)}
+              <Badge tone={streaming ? "gold" : "green"}>{streaming ? "Sedang menjawab" : "Siap membantu"}</Badge>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
@@ -152,13 +228,38 @@ function ChatPage() {
             <div className="mx-auto max-w-lg py-8 text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-navy-900 text-lg font-bold text-gold">AI</div>
               <h2 className="text-lg font-bold text-navy-900">Halo! Mau belajar apa hari ini?</h2>
-              <p className="mt-1 text-sm text-navy-600">Tanya apa saja tentang pelajaran PKBM atau keterampilan digital.</p>
-              <div className="mt-5 flex flex-col gap-2">
-                {suggestions.map((s) => (
-                  <button key={s} onClick={() => send(s)} className="rounded-xl border border-navy-100 px-4 py-2.5 text-left text-sm text-navy-800 hover:border-gold hover:bg-gold-50">
-                    {s}
-                  </button>
-                ))}
+              <p className="mt-1 text-sm text-navy-600">Tanya apa saja tentang pelajaran PKBM, keterampilan digital, tugas, atau strategi belajar yang lebih efektif.</p>
+              <div className="mt-5 rounded-[24px] border border-gold-100 bg-gold-50/60 p-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Prompt cepat</p>
+                <div className="mt-3 grid gap-2">
+                  {promptChips.slice(0,6).map((item) => (
+                    <button key={item.title} onClick={() => usePrompt(item.prompt, true)} className="rounded-xl border border-white bg-white px-4 py-2.5 text-left text-sm text-navy-800 transition hover:border-gold hover:bg-gold-50">
+                      {item.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!empty && !loadingHistory && (
+            <div className="rounded-[22px] border border-navy-100 bg-navy-50/45 px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Saran berikutnya</p>
+                  <p className="mt-1 text-sm text-navy-600">{suggestedModeText}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {promptChips.slice(0,4).map((item)=>(
+                    <button
+                      key={item.title}
+                      onClick={()=>usePrompt(item.prompt)}
+                      className="rounded-full border border-navy-100 bg-white px-3 py-1.5 text-xs font-medium text-navy-700 transition hover:border-gold hover:bg-gold-50"
+                    >
+                      {item.title}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -177,7 +278,22 @@ function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-navy-100 p-3 sm:p-4">
+        <div className="sticky bottom-0 border-t border-navy-100 bg-white/95 p-3 backdrop-blur sm:p-4">
+          <div className="mb-3 flex flex-wrap gap-2">
+            {promptChips.slice(0,4).map((item)=>(
+              <button
+                key={item.title}
+                onClick={()=>usePrompt(item.prompt)}
+                className="rounded-full border border-navy-100 bg-navy-50/50 px-3 py-1.5 text-xs font-medium text-navy-700 transition hover:border-gold hover:bg-gold-50"
+              >
+                {item.title}
+              </button>
+            ))}
+          </div>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-navy-100 bg-navy-50/50 px-4 py-3 text-xs text-navy-600">
+            <p>{streaming ? "Guru AI sedang memproses pertanyaanmu dengan konteks percakapan aktif." : "Composer tetap terlihat agar kamu bisa lanjut belajar tanpa kehilangan konteks."}</p>
+            <Badge tone="navy">Enter kirim</Badge>
+          </div>
           <div className="flex items-end gap-2">
             <textarea
               value={input}
