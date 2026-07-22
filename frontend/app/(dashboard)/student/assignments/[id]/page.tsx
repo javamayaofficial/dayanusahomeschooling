@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getAssignment, submitAssignment } from "@/lib/assignments";
@@ -25,6 +25,7 @@ export default function AssignmentDetailPage() {
   const { id } = useParams<{id:string}>(); const { show } = useToast();
   const [a,setA]=useState<Assignment|null>(null); const [error,setError]=useState<string|null>(null);
   const [text,setText]=useState(""); const [fileUrl,setFileUrl]=useState(""); const [busy,setBusy]=useState(false);
+  const submitRef = useRef<HTMLFormElement | null>(null);
   async function load(){ try{ const data=await getAssignment(id); setA(data); setText(data.my_submission?.content_text ?? ""); setFileUrl(data.my_submission?.file_url ?? ""); } catch{ setError("Tugas tidak ditemukan."); } }
   useEffect(()=>{ load(); },[id]); // eslint-disable-line react-hooks/exhaustive-deps
   const sub=a?.my_submission ?? null; const graded=sub?.status==="graded"; const locked=graded;
@@ -59,7 +60,7 @@ export default function AssignmentDetailPage() {
     : sub
       ? "Kamu sudah mengirim submission. Jika masih perlu revisi sebelum dinilai, kirim ulang dari panel ini."
       : "Isi jawaban atau tempel tautan karya agar tutor bisa langsung menilai hasil belajarmu.";
-  return (<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+  return (<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
     <div className="min-w-0">
     <Link href="/student/assignments" className="text-sm text-navy-600 hover:underline">← Kembali ke daftar tugas</Link>
     <section className="mt-3 rounded-[28px] border border-navy-100 bg-white p-6 shadow-soft">
@@ -73,14 +74,16 @@ export default function AssignmentDetailPage() {
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-navy-600"><span>Tenggat: {fmt(a.due_date)}</span><span>· Nilai maksimal: {a.max_score}</span></div>
         </div>
         <div className="rounded-[22px] border border-gold-100 bg-gold-50/70 px-4 py-3 text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Workflow</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Status saat ini</p>
           <p className="mt-1 text-sm font-semibold text-navy-900">{graded ? "Review selesai" : sub ? "Menunggu review tutor" : "Siap dikumpulkan"}</p>
         </div>
       </div>
       {a.description && <p className="mt-4 whitespace-pre-wrap leading-7 text-navy-700">{a.description}</p>}
-      <div className="mt-6 grid gap-3 md:grid-cols-3">
+      <div className="mt-6 rounded-[24px] border border-navy-100 bg-navy-50/45 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Timeline singkat</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
         {statusTimeline.map((item, index)=>(
-          <div key={item.title} className={`rounded-[24px] border p-4 ${item.done ? "border-emerald-100 bg-emerald-50/70" : "border-navy-100 bg-navy-50/45"}`}>
+          <div key={item.title} className={`rounded-[20px] border p-4 ${item.done ? "border-emerald-100 bg-emerald-50/70" : "border-white bg-white"}`}>
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-navy-600">Tahap {index+1}</p>
               <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${item.done ? "bg-emerald-100 text-emerald-700" : "bg-white text-navy-500"}`}>
@@ -91,6 +94,7 @@ export default function AssignmentDetailPage() {
             <p className="mt-2 text-sm leading-6 text-navy-600">{item.description}</p>
           </div>
         ))}
+        </div>
       </div>
     </section>
     {graded && (<div className="mt-6 rounded-[28px] border border-emerald-200 bg-emerald-50 p-5">
@@ -102,7 +106,7 @@ export default function AssignmentDetailPage() {
       {sub.content_text && <p className="mt-2 whitespace-pre-wrap text-sm text-navy-700">{sub.content_text}</p>}
       {sub.file_url && (<div className="mt-3"><MediaPreview type={guessType(sub.file_url)} url={sub.file_url} className="aspect-video max-w-sm" />
         <a href={sub.file_url} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-medium text-gold-700 hover:underline">Buka berkas ↗</a></div>)}</div>)}
-    {!locked && (<form onSubmit={onSubmit} className="mt-6 space-y-4 rounded-[28px] border border-navy-100 bg-white p-5 shadow-soft">
+    {!locked && (<form ref={submitRef} onSubmit={onSubmit} className="mt-6 space-y-4 rounded-[28px] border border-navy-100 bg-white p-5 shadow-soft">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold text-navy-900">{sub?"Kirim Ulang":"Kumpulkan Tugas"}</h3>
@@ -117,8 +121,8 @@ export default function AssignmentDetailPage() {
       <Button type="submit" disabled={busy}>{busy?"Mengirim…":sub?"Kirim Ulang":"Kumpulkan"}</Button></form>)}
     </div>
     <aside className="self-start rounded-[28px] border border-navy-100 bg-white p-5 shadow-soft lg:sticky lg:top-24">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Panel review cepat</p>
-      <h2 className="mt-2 text-lg font-semibold text-navy-900">Yang perlu kamu perhatikan sebelum submit</h2>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Ringkasan tugas</p>
+      <h2 className="mt-2 text-lg font-semibold text-navy-900">Fokus pada status, deadline, dan aksi berikutnya</h2>
       <div className="mt-4 space-y-3">
         <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
           <p className="text-sm font-semibold text-navy-900">Status tugas</p>
@@ -132,15 +136,15 @@ export default function AssignmentDetailPage() {
           </div>
         </div>
         <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
-          <p className="text-sm font-semibold text-navy-900">Target nilai</p>
+          <p className="text-sm font-semibold text-navy-900">Nilai maksimal</p>
           <p className="mt-2 text-2xl font-bold text-navy-900">{a.max_score}</p>
-          <p className="mt-1 text-sm text-navy-600">Skor maksimum untuk tugas ini.</p>
+          <p className="mt-1 text-sm text-navy-600">{graded ? "Bandingkan hasil akhir dengan target maksimal tugas." : "Gunakan ini sebagai patokan kualitas submission."}</p>
         </div>
       </div>
       {!graded && (
         <button
           type="button"
-          onClick={()=>window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}
+          onClick={()=>submitRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
           className="mt-5 w-full rounded-full bg-navy-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-navy-800"
         >
           {sub ? "Lihat panel kirim ulang" : "Buka panel submit"}

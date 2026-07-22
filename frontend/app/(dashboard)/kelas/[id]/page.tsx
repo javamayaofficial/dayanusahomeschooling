@@ -226,7 +226,7 @@ export default function KelasDetailPage() {
           </div>
           <Badge tone={c.is_bnsp_certified ? "gold" : "gray"}>{c.is_bnsp_certified ? "Jalur BNSP aktif" : "Kelas penguatan skill"}</Badge>
         </div>
-        <div className="mt-4 grid gap-3 lg:grid-cols-4">
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {milestoneItems.map((item, index)=>(
             <div key={item.title} className={`rounded-[22px] border p-4 ${milestoneTone(item.status)}`}>
               <div className="flex items-center justify-between gap-3">
@@ -413,7 +413,13 @@ export default function KelasDetailPage() {
         {activeTab==="materi" ? (
           <div className="space-y-4">
             <div className="rounded-2xl border border-navy-100 bg-navy-50/50 p-4">
-              <p className="text-sm font-semibold text-navy-900">Checklist belajar</p>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-navy-900">Checklist belajar</p>
+                  <p className="mt-1 text-xs text-navy-500">Satu daftar cukup untuk memilih materi aktif dan memantau yang sudah selesai.</p>
+                </div>
+                <Badge tone="navy">{completedCount}/{c.lessons.length} selesai</Badge>
+              </div>
               <div className="mt-3 space-y-2">
                 {c.lessons.map((lesson, index)=>(
                   <button key={lesson.id} onClick={()=>setActiveId(lesson.id)} className="flex w-full items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 text-left transition hover:bg-gold-50/40">
@@ -428,24 +434,17 @@ export default function KelasDetailPage() {
                 ))}
               </div>
             </div>
-            <ol className="space-y-3">
-            {c.lessons.map((l,i)=>(<li key={l.id}>
-              <button onClick={()=>setActiveId(l.id)} className={`w-full rounded-2xl border p-4 text-left transition ${activeLesson?.id===l.id?"border-gold-400 bg-gold-50/60":"border-navy-100 bg-white hover:bg-navy-50"}`}>
-                <div className="flex items-start gap-3">
-                  <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${activeLesson?.id===l.id?"bg-gold-100 text-gold-800":"bg-navy-50 text-navy-600"}`}>{i+1}</span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-navy-900">{l.title}</p>
-                    <p className="mt-1 text-xs text-navy-600">{T[l.content_type]}{l.duration_minutes?` · ${l.duration_minutes} menit`:""}</p>
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <p className={`text-xs font-semibold ${done[l.id]?"text-emerald-700":"text-navy-500"}`}>{done[l.id]?"Sudah selesai":"Belum selesai"}</p>
-                      {assignmentsByLesson[l.id]?.length ? <Badge tone="gold">{assignmentsByLesson[l.id].length} tugas</Badge> : null}
-                    </div>
-                    {activeLesson?.id===l.id && <p className="mt-1 text-[11px] font-semibold text-gold-700">Sedang dibuka</p>}
-                  </div>
+            {activeLesson && (
+              <div className="rounded-2xl border border-gold-100 bg-gradient-to-br from-gold-50 via-white to-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Materi aktif</p>
+                <p className="mt-2 font-semibold text-navy-900">{activeLesson.title}</p>
+                <p className="mt-2 text-sm text-navy-600">{T[activeLesson.content_type]}{activeLesson.duration_minutes?` · ${activeLesson.duration_minutes} menit`:""}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge tone={done[activeLesson.id] ? "green" : "gold"}>{done[activeLesson.id] ? "Sudah selesai" : "Sedang dipelajari"}</Badge>
+                  {assignmentsByLesson[activeLesson.id]?.length ? <Badge tone="navy">{assignmentsByLesson[activeLesson.id].length} tugas terkait</Badge> : null}
                 </div>
-              </button>
-            </li>))}
-            </ol>
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-3">

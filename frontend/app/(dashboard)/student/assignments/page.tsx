@@ -35,15 +35,14 @@ export default function AssignmentsPage() {
   },[grouped,tab]);
   const total = items?.length ?? 0;
   const completionPercent = total ? Math.round(((grouped.submitted.length + grouped.graded.length)/total)*100) : 0;
-  const spotlight = useMemo(()=>{
+  const nextFocus = useMemo(()=>{
     return (items ?? [])
       .filter((assignment)=>tabOf(assignment)==="pending")
       .sort((a,b)=>{
         const left = a.due_date ? new Date(a.due_date).getTime() : Number.MAX_SAFE_INTEGER;
         const right = b.due_date ? new Date(b.due_date).getTime() : Number.MAX_SAFE_INTEGER;
         return left-right;
-      })
-      .slice(0,3);
+      })[0] ?? null;
   },[items]);
   const boardMessage = grouped.pending.length
     ? `Ada ${grouped.pending.length} tugas yang masih perlu disiapkan. Mulai dari tenggat yang paling dekat agar ritme belajarmu tetap aman.`
@@ -55,11 +54,11 @@ export default function AssignmentsPage() {
   return (<div>
     <h1 className="text-2xl font-bold text-navy-900">Tugas</h1>
     <p className="mt-1 text-navy-600">Kerjakan tugas praktik dan lihat penilaian dari tutor.</p>
-    <section className="mt-6 rounded-[28px] border border-navy-100 bg-white p-6 shadow-soft">
+    <section className="mt-6 rounded-[28px] border border-navy-100 bg-white p-5 shadow-soft sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Command center tugas</p>
-          <h2 className="mt-2 text-xl font-semibold text-navy-900">Semua tugas, tenggat, dan status review terlihat dalam satu papan</h2>
+          <h2 className="mt-2 text-xl font-semibold text-navy-900">Fokus ke tugas yang perlu tindakan paling dekat</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-navy-600">{boardMessage}</p>
         </div>
         <div className="rounded-[22px] border border-gold-100 bg-gold-50/70 px-4 py-3 text-right">
@@ -71,7 +70,7 @@ export default function AssignmentsPage() {
       <div className="mt-5">
         <ProgressBar percent={completionPercent} />
       </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-4">
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
         <div className="rounded-[24px] border border-navy-100 bg-navy-50/50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-navy-600">Total</p>
           <p className="mt-2 text-2xl font-bold text-navy-900">{total}</p>
@@ -87,31 +86,27 @@ export default function AssignmentsPage() {
           <p className="mt-2 text-2xl font-bold text-navy-900">{grouped.submitted.length}</p>
           <p className="mt-2 text-sm text-navy-600">Submission yang sudah masuk ke tutor.</p>
         </div>
-        <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Sudah dinilai</p>
-          <p className="mt-2 text-2xl font-bold text-navy-900">{grouped.graded.length}</p>
-          <p className="mt-2 text-sm text-navy-600">Tugas dengan nilai atau feedback akhir.</p>
-        </div>
       </div>
-      <div className="mt-5 grid gap-3 lg:grid-cols-3">
-        {spotlight.length===0 ? (
-          <div className="rounded-[24px] border border-dashed border-navy-200 bg-navy-50/50 p-5 text-sm text-navy-600 lg:col-span-3">
-            Tidak ada tugas prioritas tinggi saat ini. Kamu bisa menunggu feedback tutor atau lanjut memperkuat portofolio.
-          </div>
-        ) : spotlight.map((assignment)=>{ const meta=urgencyMeta(assignment); return (
-          <Link key={assignment.id} href={`/student/assignments/${assignment.id}`} className="rounded-[24px] border border-navy-100 bg-navy-50/45 p-4 transition hover:border-gold-300 hover:bg-gold-50/30">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Fokus berikutnya</p>
-                <h3 className="mt-2 line-clamp-2 font-semibold text-navy-900">{assignment.title}</h3>
-              </div>
-              <Badge tone={meta.tone}>{meta.label}</Badge>
+      {nextFocus ? (
+        <Link href={`/student/assignments/${nextFocus.id}`} className="mt-5 block rounded-[24px] border border-gold-100 bg-gradient-to-r from-gold-50 via-white to-white p-4 transition hover:border-gold-300">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Fokus berikutnya</p>
+              <h3 className="mt-2 text-base font-semibold text-navy-900">{nextFocus.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-navy-600">{urgencyMeta(nextFocus).detail}</p>
             </div>
-            <p className="mt-3 text-sm leading-6 text-navy-600">{meta.detail}</p>
-            <p className="mt-3 text-xs text-navy-500">Tenggat {fmt(assignment.due_date)} · Nilai maks {assignment.max_score}</p>
-          </Link>
-        ); })}
-      </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge tone={urgencyMeta(nextFocus).tone}>{urgencyMeta(nextFocus).label}</Badge>
+              <Badge tone="navy">Nilai maks {nextFocus.max_score}</Badge>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-navy-500">Tenggat {fmt(nextFocus.due_date)} · Buka detail untuk langsung submit</p>
+        </Link>
+      ) : (
+        <div className="mt-5 rounded-[24px] border border-dashed border-navy-200 bg-navy-50/50 p-5 text-sm text-navy-600">
+          Tidak ada tugas prioritas tinggi saat ini. Kamu bisa menunggu feedback tutor atau lanjut memperkuat portofolio.
+        </div>
+      )}
     </section>
     <div className="mt-6 flex flex-wrap gap-2">
       {TABS.map(t=>(<button key={t.key} onClick={()=>setTab(t.key)} className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${tab===t.key?"bg-navy-900 text-white":"border border-navy-100 bg-white text-navy-600 hover:bg-navy-50"}`}>
