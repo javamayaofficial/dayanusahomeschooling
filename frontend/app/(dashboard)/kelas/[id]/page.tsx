@@ -20,6 +20,11 @@ function assignmentStatusMeta(assignment: Assignment){
   if (isOverdue(assignment)) return { label:"Terlambat", tone:"red" as const };
   return { label:"Siap dikerjakan", tone:"gold" as const };
 }
+function boardTone(status:"done"|"active"|"upcoming"){
+  if (status==="done") return "border-emerald-100 bg-emerald-50/80";
+  if (status==="active") return "border-gold-200 bg-gold-50/80";
+  return "border-navy-100 bg-white";
+}
 export default function KelasDetailPage() {
   const { id } = useParams<{id:string}>(); const { show } = useToast();
   const [c,setC]=useState<SkillClassDetail|null>(null); const [err,setErr]=useState<string|null>(null);
@@ -98,11 +103,62 @@ export default function KelasDetailPage() {
   const percent = c.lessons.length ? Math.round((completedCount/c.lessons.length)*100) : 0;
   const activeLessonAssignments = activeLesson ? assignmentsByLesson[activeLesson.id] ?? [] : [];
   const touchedTaskPercent = assignmentCounts.total ? Math.round(((assignmentCounts.submitted + assignmentCounts.graded)/assignmentCounts.total)*100) : 0;
+  const allLessonsDone = c.lessons.length > 0 && completedCount === c.lessons.length;
+  const anyTaskTouched = assignmentCounts.submitted + assignmentCounts.graded > 0;
+  const allTasksSubmitted = assignmentCounts.total > 0 && assignmentCounts.pending === 0;
+  const hasGradedTask = assignmentCounts.graded > 0;
+  const currentFocus = !allLessonsDone
+    ? "Selesaikan materi aktif untuk membuka langkah belajar berikutnya."
+    : assignmentCounts.total > 0 && !anyTaskTouched
+      ? "Semua materi selesai. Sekarang waktunya mengerjakan tugas kelas."
+      : assignmentCounts.submitted > 0 && !hasGradedTask
+        ? "Tugas sudah dikirim. Pantau penilaian tutor pada tugas terkait."
+        : hasGradedTask
+          ? "Sebagian tugas sudah dinilai. Lanjutkan perbaikan atau kerjakan tugas lain jika masih ada."
+          : "Kelas ini sudah siap dipelajari sesuai ritme siswa.";
   return (<div>
     <Link href="/kelas" className="text-sm text-navy-600 hover:underline">← Kembali ke kelas</Link>
     <h1 className="mt-3 text-2xl font-bold text-navy-900">{c.title}</h1>
     {c.skkni_code && <p className="mt-1 text-xs text-navy-600">Referensi: {c.skkni_code}</p>}
     {c.description && <p className="mt-3 text-navy-600">{c.description}</p>}
+    <section className="mt-6 rounded-[28px] border border-navy-100 bg-white p-5 shadow-soft sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-700">Peta perjalanan kelas</p>
+          <h2 className="mt-2 text-xl font-semibold text-navy-900">Belajar terasa jelas dari materi sampai tugas</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-navy-600">{currentFocus}</p>
+        </div>
+        <div className="rounded-[22px] border border-gold-100 bg-gold-50/70 px-4 py-3 text-right">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-700">Status kelas</p>
+          <p className="mt-1 text-2xl font-bold text-navy-900">{Math.round((percent + touchedTaskPercent) / 2)}%</p>
+          <p className="text-xs text-navy-600">gabungan materi & tugas</p>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className={`rounded-[24px] border p-4 ${boardTone(allLessonsDone ? "done" : "active")}`}>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-navy-600">Langkah 1</p>
+          <h3 className="mt-2 font-semibold text-navy-900">Pelajari materi</h3>
+          <p className="mt-1 text-sm text-navy-600">{completedCount}/{c.lessons.length} materi selesai</p>
+          <p className="mt-3 text-xs font-semibold text-navy-700">{allLessonsDone ? "Semua lesson sudah dituntaskan." : "Fokus pada lesson aktif lebih dulu."}</p>
+        </div>
+        <div className={`rounded-[24px] border p-4 ${boardTone(allLessonsDone ? (allTasksSubmitted ? "done" : "active") : "upcoming")}`}>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-navy-600">Langkah 2</p>
+          <h3 className="mt-2 font-semibold text-navy-900">Kerjakan tugas</h3>
+          <p className="mt-1 text-sm text-navy-600">{assignmentCounts.pending} belum dikumpulkan dari {assignmentCounts.total} tugas</p>
+          <p className="mt-3 text-xs font-semibold text-navy-700">
+            {assignmentCounts.total===0 ? "Belum ada tugas terkait pada kelas ini." : allLessonsDone ? "Gunakan tab tugas untuk lanjut submit." : "Tugas akan terasa lebih relevan setelah materi selesai."}
+          </p>
+        </div>
+        <div className={`rounded-[24px] border p-4 ${boardTone(hasGradedTask ? "done" : anyTaskTouched ? "active" : "upcoming")}`}>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-navy-600">Langkah 3</p>
+          <h3 className="mt-2 font-semibold text-navy-900">Tinjau hasil</h3>
+          <p className="mt-1 text-sm text-navy-600">{assignmentCounts.graded} tugas sudah dinilai</p>
+          <p className="mt-3 text-xs font-semibold text-navy-700">
+            {hasGradedTask ? "Gunakan feedback tutor untuk naik level." : anyTaskTouched ? "Menunggu penilaian tutor." : "Nilai dan feedback akan muncul setelah submit."}
+          </p>
+        </div>
+      </div>
+    </section>
     <div className="mt-6 flex flex-wrap gap-2">
       <button onClick={()=>setActiveTab("materi")} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab==="materi"?"bg-navy-900 text-white":"border border-navy-100 bg-white text-navy-700 hover:bg-navy-50"}`}>
         Materi

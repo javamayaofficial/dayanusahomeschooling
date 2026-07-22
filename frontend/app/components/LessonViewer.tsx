@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import type { Lesson } from "@/types";
 
 const CONTENT_LABELS: Record<Lesson["content_type"], string> = {
@@ -77,6 +79,11 @@ export default function LessonViewer({
   const mediaUrl = lesson.content_url?.trim() || "";
   const embedUrl = mediaUrl ? getEmbedUrl(mediaUrl) : null;
   const progressPercent = totalLessons ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  const [showVideoPlayer, setShowVideoPlayer] = useState(lesson.content_type !== "video");
+
+  useEffect(() => {
+    setShowVideoPlayer(lesson.content_type !== "video");
+  }, [lesson.id, lesson.content_type]);
 
   return (
     <section className="rounded-[28px] border border-navy-100 bg-white p-5 shadow-soft sm:p-6">
@@ -131,7 +138,46 @@ export default function LessonViewer({
       <div className="mt-6 space-y-5">
         {lesson.content_type === "video" && mediaUrl ? (
           <div className="overflow-hidden rounded-[24px] border border-navy-100 bg-navy-950">
-            {embedUrl ? (
+            {!showVideoPlayer ? (
+              <button
+                type="button"
+                onClick={() => setShowVideoPlayer(true)}
+                className="group relative flex aspect-video w-full items-end overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(255,210,94,0.45),_transparent_32%),linear-gradient(135deg,_#06142b_0%,_#10284c_52%,_#1c4f88_100%)] p-6 text-left"
+              >
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,_rgba(6,20,43,0.08)_0%,_rgba(6,20,43,0.72)_100%)]" />
+                <div className="absolute right-5 top-5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/90">
+                  Preview video
+                </div>
+                <div className="relative flex w-full items-end justify-between gap-4">
+                  <div className="max-w-xl">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-200">Lesson video</p>
+                    <h3 className="mt-3 text-2xl font-semibold text-white sm:text-[28px]">{lesson.title}</h3>
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-white/80">
+                      <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Format video</span>
+                      {lesson.duration_minutes ? (
+                        <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">{lesson.duration_minutes} menit</span>
+                      ) : null}
+                      {embedUrl ? (
+                        <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Embedded player</span>
+                      ) : isDirectVideo(mediaUrl) ? (
+                        <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Direct video</span>
+                      ) : (
+                        <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1">Tautan eksternal</span>
+                      )}
+                    </div>
+                    <p className="mt-4 max-w-lg text-sm leading-6 text-white/78">
+                      Buka video untuk mengikuti materi seperti pengalaman LMS: fokus pada inti lesson, lalu lanjut ke tugas yang terkait.
+                    </p>
+                  </div>
+                  <div className="relative shrink-0">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-navy-950 shadow-[0_24px_48px_rgba(0,0,0,0.28)] transition group-hover:scale-105">
+                      <span className="ml-1 text-3xl">▶</span>
+                    </div>
+                    <p className="mt-3 text-center text-sm font-semibold text-white">Putar materi</p>
+                  </div>
+                </div>
+              </button>
+            ) : embedUrl ? (
               <iframe
                 src={embedUrl}
                 title={lesson.title}
